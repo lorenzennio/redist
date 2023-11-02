@@ -1,0 +1,9 @@
+eoshep
+dynesty
+jsonschema==4.17.3
+pyhf
+requests
+uproot
+seaborn
+numexpr
+iminuit

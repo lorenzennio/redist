@@ -1,0 +1,18 @@
+# images
+#*.pdf
+#*.png
+
+#data files
+#*.npy
+# *.pkl
+
+#results
+results/
+
+#cache
+*/__pycache__/
+*.pyc
+
+.*/
+
+*.egg-info/
