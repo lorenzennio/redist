@@ -2,6 +2,23 @@ from publik.pyhf_modifier import custom_modifier
 
 import numpy as np
 import scipy as sp
+import pyhf
+
+def add_to_model(model, channels, samples, modifier_set, modifier_specs):
+    """
+        Add a custom modifier to a pyhf model.
+    """
+    spec = model.spec
+    
+    for c, chan in enumerate(spec['channels']):
+        if chan['name'] in channels:
+            for s, samp in enumerate(chan['samples']):
+                if samp['name'] in samples:
+                  spec['channels'][c]['samples'][s]['modifiers'].append(modifier_specs)
+
+    model = pyhf.Model(spec, validate=False, batch_size = None, modifier_set=modifier_set)
+
+    return model
 
 def add(new_params, alt_dist, null_dist, map, binning):
     """
@@ -29,7 +46,6 @@ class reweight():
         """
         alt_binned = bintegrate(self.alt_dist, self.binning, tuple(pars.values()))
                 
-        # compute the new weights and process them for sensibility
         weights = alt_binned / self.null_binned
         
         weights[weights<0] = 1.
@@ -42,7 +58,6 @@ class reweight():
         if key in self.cache:
             return self.cache[key]
                                 
-        # compute the new weights and process them for sensibility
         weights = self.get_weights(pars)
                 
         def func(ibins):
