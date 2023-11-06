@@ -7,3 +7,4 @@ uproot
 seaborn
 numexpr
 iminuit
+pytest
