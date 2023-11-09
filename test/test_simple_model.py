@@ -52,7 +52,7 @@ class TestSimpleModel:
                     'h'   :{'inits': (1.,1.), 'bounds': ((0., 5.),(1., 6.)), 'cov': [[1.,0.5],[0.5,1.]], 'paramset_type': 'constrained_by_normal'}
                 }
 
-    expanded_pyhf = modifier.add(new_params, alt_dist, null_dist, map, binning)
+    cmod = modifier.Modifier(new_params, alt_dist, null_dist, map, binning)
     
     custom_mod = {
                 "name": "theory",
@@ -64,7 +64,7 @@ class TestSimpleModel:
                     }
               }
 
-    model = modifier.add_to_model(model, ['singlechannel'], ['signal'], expanded_pyhf, custom_mod)
+    model = modifier.add_to_model(model, ['singlechannel'], ['signal'], cmod.expanded_pyhf, custom_mod)
     data = [58., 85.] + model.config.auxdata
     
     fixed = model.config.suggested_fixed()
@@ -73,7 +73,7 @@ class TestSimpleModel:
     best_fit = pyhf.infer.mle.fit(data, model, fixed_params=fixed)
 
     def test_set_up_modifier(self):
-        assert 'custom' in self.expanded_pyhf
+        assert 'custom' in self.cmod.expanded_pyhf
         
     def test_add_custom_modifier(self):
         assert 'h_decorrelated[0]' in self.model.config.par_map
