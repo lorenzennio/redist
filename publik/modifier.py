@@ -7,7 +7,7 @@ from publik import custom_modifier
 
 def add_to_model(model, channels, samples, modifier_set, modifier_specs):
     """
-        Add a custom modifier to a pyhf model.
+    Add a custom modifier to a pyhf model.
     """
     spec = model.spec
     
@@ -22,6 +22,10 @@ def add_to_model(model, channels, samples, modifier_set, modifier_specs):
     return model
 
 class Modifier():
+    """
+    Modifier implementation to reweight historgram according to the ratio of 
+    a null and an alternative distribution. 
+    """
     def __init__(self, new_pars, alt_dist, null_dist, map, bins):
         # store null and alternative distributions
         self.null_dist = null_dist
@@ -76,6 +80,9 @@ class Modifier():
         return corr_pars, unco_pars
                 
     def _corr_infos(self, corr_pars):
+        """
+        Compute and store pca rotation matrix for correlated parameters.
+        """
         corr_infos = {}
         if corr_pars:
             for k,v in corr_pars.items():
@@ -88,7 +95,7 @@ class Modifier():
         
     def rotate_pars(self, pars):
         """
-        map from pca parameters to true parameters
+        Map from pca parameters to true parameters.
         """
         rot_pars = {}
         for k,v in pars.items():
@@ -111,9 +118,8 @@ class Modifier():
 
     def get_weights(self, pars):
         """
-        compute the new weights and process them for sensibility
+        Compute the new weights and process them for sensibility.
         """
-        
         # compute original parameters from pyhf parameters
         rot_pars = self.rotate_pars(pars)
         
@@ -127,6 +133,9 @@ class Modifier():
         return weights
         
     def weight_func(self, pars):
+        """
+        Build function that applies weights to histogram.
+        """
         key = tuple(i for i in pars.items())
         if key in self.cache:
             return self.cache[key]
@@ -142,6 +151,9 @@ class Modifier():
         return func
     
 def bintegrate(func, bins, args=()):
+    """
+    Integrate function in given bins.
+    """
     return np.array([sp.integrate.quad(func, q2min, q2max, args=args)[0] for q2min, q2max in zip(bins[:-1], bins[1:]) ]) 
 
 def _pca(cov, return_rot=False):
@@ -161,4 +173,7 @@ def _pca(cov, return_rot=False):
     return uvec
 
 def par_dict(model, pars):
+    """
+    Build parmaeter dictionary for pyhf model.
+    """
     return {k: pars[v['slice']][0] if len(pars[v['slice']])==1 else pars[v['slice']].tolist() for k, v in model.config.par_map.items()}
