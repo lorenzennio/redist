@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from publik.pyhf_modifier import modifier
+from publik import modifier
 
 def test_bintegrate():
     assert list(modifier.bintegrate(lambda x : 1, np.linspace(0,5,6))) == [1., 1., 1., 1., 1.]

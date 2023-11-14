@@ -3,7 +3,7 @@ import matplotlib
 matplotlib.style.use('publik.style')
 import matplotlib.pyplot as plt
 import seaborn as sns
-from publik.pyhf_modifier import modifier
+from publik import modifier
 
 def dists(cmod, alt_pars, lims=None, plot_dists=True, plot_weights=False):
     

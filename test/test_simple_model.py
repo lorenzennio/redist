@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 import pyhf
-from publik.pyhf_modifier import modifier
+from publik import modifier
 
 def null_dist(x, a=1., h1=2., h2=0.):
     return a*(1+x*h1-x**2*h2)

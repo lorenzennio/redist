@@ -1,10 +1,9 @@
-from publik.pyhf_modifier import custom_modifier
-
 import re
 from collections import defaultdict
 import numpy as np
 import scipy as sp
 import pyhf
+from publik import custom_modifier
 
 def add_to_model(model, channels, samples, modifier_set, modifier_specs):
     """
