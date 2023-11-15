@@ -1,26 +1,11 @@
 import re
+from copy import deepcopy
 from collections import defaultdict
 import numpy as np
 import scipy as sp
+import json
 import pyhf
 from publik import custom_modifier
-
-def add_to_model(model, channels, samples, modifier_set, modifier_specs):
-    """
-    Add a custom modifier to a pyhf model.
-    """
-    spec = model.spec
-    
-    for c, chan in enumerate(spec['channels']):
-        if chan['name'] in channels:
-            for s, samp in enumerate(chan['samples']):
-                if samp['name'] in samples:
-                  spec['channels'][c]['samples'][s]['modifiers'].append(modifier_specs)
-
-    model = pyhf.Model(spec, validate=False, batch_size = None, modifier_set=modifier_set)
-
-    return model
-
 class Modifier():
     """
     Modifier implementation to reweight historgram according to the ratio of 
@@ -29,16 +14,17 @@ class Modifier():
     def __init__(self, new_pars, alt_dist, null_dist, map, bins):
         # store null and alternative distributions
         self.null_dist = null_dist
-        self.alt_dist = alt_dist
+        self.alt_dist  = alt_dist
         
         # stor mapping distribution and binning
-        self.map = map
-        self.bins = bins
+        self.map  = np.array(map )
+        self.bins = np.array(bins)
         
         # compute the bin-integrated null distribution (this is fixed)
         self.null_binned = bintegrate(null_dist, bins)
         
         # take care of correlated paramters
+        self.new_pars = new_pars
         self.corr_pars, self.unco_pars = self._separate_pars(new_pars)
         self.corr_infos = self._corr_infos(self.corr_pars)
                 
@@ -177,3 +163,69 @@ def par_dict(model, pars):
     Build parmaeter dictionary for pyhf model.
     """
     return {k: pars[v['slice']][0] if len(pars[v['slice']])==1 else pars[v['slice']].tolist() for k, v in model.config.par_map.items()}
+
+def add_to_model(model, channels, samples, modifier_set, modifier_specs):
+    """
+    Add a custom modifier to a pyhf model.
+    """
+    spec = model.spec
+    
+    for c, chan in enumerate(spec['channels']):
+        if chan['name'] in channels:
+            for s, samp in enumerate(chan['samples']):
+                if samp['name'] in samples:
+                  spec['channels'][c]['samples'][s]['modifiers'].append(modifier_specs)
+
+    model = pyhf.Model(spec, validate=False, batch_size=None, modifier_set=modifier_set)
+
+    return model
+
+def save(file, spec, cmod, data=None):
+    """
+    Save the custom model, mapping distribution (and data).
+    """
+    d = {
+        'spec': spec, 
+        'new_pars': cmod.new_pars,
+        'map':  cmod.map.tolist(),
+        'bins': cmod.bins if isinstance(cmod.bins,list) else cmod.bins.tolist()
+        }
+    if data is not None:
+        d['data'] = np.array(data).tolist()
+    
+    with open(file, 'w') as f:
+        json.dump(d, f, indent=4)
+        
+def load(file, alt_dist, null_dist, return_modifier=False, return_data=False):
+    """
+    Load and build model from file
+    """
+    with open(file, 'r') as f:
+        d = json.load(f)
+        
+    new_pars = _read_pars(d['new_pars'])
+    
+    cmod = Modifier(new_pars, alt_dist, null_dist, d['map'], d['bins'])
+    
+    model = pyhf.Model(d['spec'], validate=False, batch_size=None, modifier_set=cmod.expanded_pyhf)
+
+    to_return = (model,)
+    if return_modifier:
+        to_return = to_return + (cmod,)
+    if return_data:
+        to_return = to_return +  (d['data'],)
+        
+    if return_modifier and return_data: return model, cmod, d['data']
+    if return_modifier: return model, cmod
+    if return_data: return model, d['data']
+    return model
+
+def _read_pars(json_input):
+    """
+    Parse lists to tuples for pyhf.
+    """
+    new_pars = deepcopy(json_input)
+    for k, v in json_input.items():
+        new_pars[k]['inits'] = tuple(v['inits'])
+        new_pars[k]['bounds'] = tuple(tuple(w) for w in v['bounds'])
+    return new_pars
