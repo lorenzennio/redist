@@ -8,6 +8,7 @@
 
 #results
 results/
+*.json
 
 #cache
 */__pycache__/
