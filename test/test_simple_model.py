@@ -52,7 +52,7 @@ class TestSimpleModel:
                     'h'   :{'inits': (1.,1.), 'bounds': ((0., 5.),(1., 6.)), 'cov': [[1.,0.5],[0.5,1.]], 'paramset_type': 'constrained_by_normal'}
                 }
 
-    cmod = modifier.Modifier(new_params, alt_dist, null_dist, map, binning)
+    cmod = modifier.Modifier(new_params, alt_dist, null_dist, map, [binning])
     
     custom_mod = {
                 "name": "theory",

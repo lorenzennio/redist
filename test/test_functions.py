@@ -3,9 +3,9 @@ import numpy as np
 from publik import modifier
 
 def test_bintegrate():
-    assert list(modifier.bintegrate(lambda x : 1, np.linspace(0,5,6))) == [1., 1., 1., 1., 1.]
-    assert list(modifier.bintegrate(lambda x : x, np.linspace(0,5,6))) == [0.5, 1.5, 2.5, 3.5, 4.5]
-    assert pytest.approx(modifier.bintegrate(lambda x : np.exp(x), np.linspace(0,5,6)), 1e-8) == [ 1.71828183,  4.67077427, 12.69648082, 34.51261311, 93.81500907]
+    assert list(modifier.bintegrate(lambda x : 1, [np.linspace(0,5,6)])) == [1., 1., 1., 1., 1.]
+    assert list(modifier.bintegrate(lambda x : x, [np.linspace(0,5,6)])) == [0.5, 1.5, 2.5, 3.5, 4.5]
+    assert pytest.approx(modifier.bintegrate(lambda x : np.exp(x), [np.linspace(0,5,6)]), 1e-8) == [ 1.71828183,  4.67077427, 12.69648082, 34.51261311, 93.81500907]
     
 def test_pca():
     cov = np.identity(10)

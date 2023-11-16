@@ -1,11 +1,13 @@
 import re
 from copy import deepcopy
+import itertools
 from collections import defaultdict
 import numpy as np
 import scipy as sp
 import json
 import pyhf
 from publik import custom_modifier
+
 class Modifier():
     """
     Modifier implementation to reweight historgram according to the ratio of 
@@ -17,8 +19,9 @@ class Modifier():
         self.alt_dist  = alt_dist
         
         # stor mapping distribution and binning
-        self.map  = np.array(map )
-        self.bins = np.array(bins)
+        shape = np.shape(map)
+        self.map  = np.reshape(map, (shape[0], np.prod(shape[1:])))
+        self.bins = bins
         
         # compute the bin-integrated null distribution (this is fixed)
         self.null_binned = bintegrate(null_dist, bins)
@@ -116,6 +119,9 @@ class Modifier():
         weights[weights<0] = 1.
         weights[np.isnan(weights)] = 1.
         
+        #flatten the weights
+        weights = weights.reshape(-1)
+
         return weights
         
     def weight_func(self, pars):
@@ -140,8 +146,12 @@ def bintegrate(func, bins, args=()):
     """
     Integrate function in given bins.
     """
-    return np.array([sp.integrate.quad(func, q2min, q2max, args=args)[0] for q2min, q2max in zip(bins[:-1], bins[1:]) ]) 
-
+    ranges = [list(zip(b[:-1], b[1:])) for b in bins]
+    results = []
+    for limits in itertools.product(*ranges):
+        results.append(sp.integrate.nquad(func, limits, args=args)[0])
+    return np.reshape(results, tuple(len(b)-1 for b in bins)).T
+    
 def _pca(cov, return_rot=False):
     """Principal Component analysis, moving to a space where the covariance matrix is diagonal
     https://www.cs.cmu.edu/~elaw/papers/pca.pdf

@@ -20,12 +20,12 @@ def dists(cmod, alt_pars, lims=None, plot_dists=True, plot_weights=False):
         ax.plot(x, cmod.null_dist(x), 'C1',label='null')
         ax.plot(x, cmod.alt_dist(x, *alt_pars), 'C2', label='alt')
 
-        ax.stairs(null, cmod.bins,       color='C1', linewidth=1.5)
-        ax.stairs(alt, cmod.bins,        color='C2', linewidth=1.5)
+        ax.stairs(null, cmod.bins[0],       color='C1', linewidth=1.5)
+        ax.stairs(alt, cmod.bins[0],        color='C2', linewidth=1.5)
     
     if plot_weights:
         ax.plot(x, cmod.alt_dist(x, *alt_pars)/cmod.null_dist(x), 'C3', label='weights')
-        ax.stairs(alt/null, cmod.bins,   color='C3', linewidth=1.5)
+        ax.stairs(alt/null, cmod.bins[0],   color='C3', linewidth=1.5)
         ax.set_ylim(0, 1.5*max(alt/null))
     
     plt.legend()
