@@ -13,6 +13,12 @@ class TestSimpleModel:
     binning = np.array([2.,3.,4.])
     map = np.array([[5.,0], [0,10.]])
 
+    new_params = {
+                    'a'   :{'inits': (1.,), 'bounds': ((0., 10.),), 'paramset_type': 'unconstrained'},
+                    'h'   :{'inits': (1.,1.), 'bounds': ((0., 5.),(1., 6.)), 'cov': [[1.,0.5],[0.5,1.]], 'paramset_type': 'constrained_by_normal'}
+                }
+
+    cmod = modifier.Modifier(new_params, alt_dist, null_dist, map, [binning])
 
     spec = {
         "channels": [
@@ -46,13 +52,6 @@ class TestSimpleModel:
         ]
         }
     model = pyhf.Model(spec)
-
-    new_params = {
-                    'a'   :{'inits': (1.,), 'bounds': ((0., 10.),), 'paramset_type': 'unconstrained'},
-                    'h'   :{'inits': (1.,1.), 'bounds': ((0., 5.),(1., 6.)), 'cov': [[1.,0.5],[0.5,1.]], 'paramset_type': 'constrained_by_normal'}
-                }
-
-    cmod = modifier.Modifier(new_params, alt_dist, null_dist, map, [binning])
     
     custom_mod = {
                 "name": "theory",
