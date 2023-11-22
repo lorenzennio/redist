@@ -57,24 +57,24 @@ class null_pred:
     Null (SM) prediction
     """
     def __init__(self):
-        self.parameters = eos.Parameters()
-        self.options = eos.Options(**{'form-factors': 'BSZ2015', 'model': 'WET'})
+        p = analysis().parameters
+        k = eos.Kinematics({'q2': 0.})
+        o = eos.Options(**{'form-factors': 'BSZ2015', 'model': 'WET'})
+        
+        self.kv1 = k['q2']
+
+        self.obs = eos.Observable.make('B->Knunu::dBR/dq2', p, k, o)
 
     def distribution(self, q2):
         if isinstance(q2, numbers.Number):
-            obs = eos.Observable.make(
-                'B->Knunu::dBR/dq2', 
-                self.parameters, 
-                eos.Kinematics(q2=q2),
-                self.options).evaluate()
+            self.kv1.set(q2)
+            obs = self.obs.evaluate()
         else:
-            obs = np.array([eos.Observable.make(
-                'B->Knunu::dBR/dq2', 
-                self.parameters, 
-                eos.Kinematics(q2=q),
-                self.options).evaluate() 
-                   for q in q2])
-            
+            obs = []
+            for q in q2:
+                self.kv1.set(q)
+                obs.append(self.obs.evaluate())
+
         return obs
     
 class alt_pred:
@@ -83,35 +83,47 @@ class alt_pred:
     """
     def __init__(self):
         self.ana = analysis()
-        self.options = eos.Options(**{'form-factors': 'BSZ2015', 'model': 'WET'})
+        p = self.ana.parameters
+        k = eos.Kinematics({'q2': 0.})
+        o = eos.Options(**{'form-factors': 'BSZ2015', 'model': 'WET'})
+        
+        self.kv1 = k['q2'                      ]
+        self.wc1 = p['sbnunu::Re{cVL}'         ]
+        self.wc2 = p['sbnunu::Re{cSL}'         ]
+        self.wc3 = p['sbnunu::Re{cTL}'         ]
+        self.hv1 = p['B->K::alpha^f+_0@BSZ2015']
+        self.hv2 = p['B->K::alpha^f+_1@BSZ2015']
+        self.hv3 = p['B->K::alpha^f+_2@BSZ2015']
+        self.hv4 = p['B->K::alpha^f0_1@BSZ2015']
+        self.hv5 = p['B->K::alpha^f0_2@BSZ2015']
+        self.hv6 = p['B->K::alpha^fT_0@BSZ2015']
+        self.hv7 = p['B->K::alpha^fT_1@BSZ2015']
+        self.hv8 = p['B->K::alpha^fT_2@BSZ2015']
+        
+        self.obs = eos.Observable.make('B->Knunu::dBR/dq2', p, k, o)
 
     def distribution(self, q2, cvl, csl, ctl, fp0, fp1, fp2, f01, f02, fT0, fT1, fT2):
-        self.ana.parameters['sbnunu::Re{cVL}'         ].set(cvl)
-        self.ana.parameters['sbnunu::Re{cSL}'         ].set(csl)
-        self.ana.parameters['sbnunu::Re{cTL}'         ].set(ctl)
-        self.ana.parameters['B->K::alpha^f+_0@BSZ2015'].set(fp0)
-        self.ana.parameters['B->K::alpha^f+_1@BSZ2015'].set(fp1)
-        self.ana.parameters['B->K::alpha^f+_2@BSZ2015'].set(fp2)
-        self.ana.parameters['B->K::alpha^f0_1@BSZ2015'].set(f01)
-        self.ana.parameters['B->K::alpha^f0_2@BSZ2015'].set(f02)
-        self.ana.parameters['B->K::alpha^fT_0@BSZ2015'].set(fT0)
-        self.ana.parameters['B->K::alpha^fT_1@BSZ2015'].set(fT1)
-        self.ana.parameters['B->K::alpha^fT_2@BSZ2015'].set(fT2)
+        self.wc1.set(cvl)
+        self.wc2.set(csl)
+        self.wc3.set(ctl)
+        self.hv1.set(fp0)
+        self.hv2.set(fp1)
+        self.hv3.set(fp2)
+        self.hv4.set(f01)
+        self.hv5.set(f02)
+        self.hv6.set(fT0)
+        self.hv7.set(fT1)
+        self.hv8.set(fT2)
 
         if isinstance(q2, numbers.Number):
-            obs = eos.Observable.make(
-                'B->Knunu::dBR/dq2', 
-                self.ana.parameters, 
-                eos.Kinematics(q2=q2),
-                self.options).evaluate()
+            self.kv1.set(q2)
+            obs = self.obs.evaluate()
         else:
-            obs = np.array([eos.Observable.make(
-                'B->Knunu::dBR/dq2', 
-                self.ana.parameters, 
-                eos.Kinematics(q2=q),
-                self.options).evaluate() 
-                   for q in q2])
-            
+            obs = []
+            for q in q2:
+                self.kv1.set(q)
+                obs.append(self.obs.evaluate())
+
         return obs
     
 def parameter_cov(ana):
