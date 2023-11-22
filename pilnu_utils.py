@@ -38,20 +38,19 @@ class null_pred:
     def __init__(self):
         p = eos.Parameters()
         o = eos.Options({'form-factors': 'BSZ2015', 'l': 'tau', 'model':'WET'})
-        k = eos.Kinematics({
-            'q2':            5.0,  'q2_min':            3.4,     'q2_max':           26.41,
-            'cos(theta_l)':  0.0,  'cos(theta_l)_min': -1.0,      'cos(theta_l)_max': +1.0,
-        })
+        k = eos.Kinematics({'q2': 5.0, 'cos(theta_l)': 0.0,})
+
         self.kv1 = k['q2']
         self.kv2 = k['cos(theta_l)']
-        self.pdf = eos.SignalPDF.make('B->pilnu::d^2Gamma/dq2/dcos(theta_l)', p, k, o)
+        
+        self.obs = eos.Observable.make('B->pilnu::d^2BR/dq2/dcos(theta_l)', p, k, o)
 
 
     def distribution(self, q2, costl):
         if isinstance(q2, numbers.Number) and isinstance(costl, numbers.Number):
             self.kv1.set(q2)
             self.kv2.set(costl)
-            obs = np.exp(self.pdf.evaluate() - self.pdf.normalization())
+            obs = self.obs.evaluate()
         else:
             obs = []
             for q in q2:
@@ -59,7 +58,7 @@ class null_pred:
                 for ct in costl:
                     self.kv1.set(q)
                     self.kv2.set(ct)
-                    o = np.exp(self.pdf.evaluate() - self.pdf.normalization())
+                    o = self.obs.evaluate()
                     coslist.append(o)
                 obs.append(coslist)
             obs = np.array(obs).T
@@ -74,10 +73,8 @@ class alt_pred:
         self.ana = analysis()
         p = self.ana.parameters
         o = eos.Options({'form-factors': 'BSZ2015', 'l': 'tau', 'model':'WET'})
-        k = eos.Kinematics({
-            'q2':            5.0,  'q2_min':            3.4,     'q2_max':           26.41,
-            'cos(theta_l)':  0.0,  'cos(theta_l)_min': -1.0,      'cos(theta_l)_max': +1.0,
-        })
+        k = eos.Kinematics({'q2': 5.0, 'cos(theta_l)': 0.0,})
+        
         self.kv1 = k['q2']
         self.kv2 = k['cos(theta_l)']
         self.wc1 = p['ubtaunutau::Re{cVL}'     ]
@@ -88,7 +85,8 @@ class alt_pred:
         self.hv3 = p['B->D::alpha^f+_2@BSZ2015']
         self.hv4 = p['B->D::alpha^f0_1@BSZ2015']
         self.hv5 = p['B->D::alpha^f0_2@BSZ2015']
-        self.pdf = eos.SignalPDF.make('B->pilnu::d^2Gamma/dq2/dcos(theta_l)', p, k, o)
+        
+        self.obs = eos.Observable.make('B->pilnu::d^2BR/dq2/dcos(theta_l)', p, k, o)
 
 
     def distribution(self, q2, costl, cvl, csl, ct, fp0, fp1, fp2, f01, f02):
@@ -104,7 +102,7 @@ class alt_pred:
         if isinstance(q2, numbers.Number) and isinstance(costl, numbers.Number):
             self.kv1.set(q2)
             self.kv2.set(costl)
-            obs = np.exp(self.pdf.evaluate() - self.pdf.normalization())
+            obs = self.obs.evaluate()
         else:
             obs = []
             for q in q2:
@@ -112,7 +110,7 @@ class alt_pred:
                 for ct in costl:
                     self.kv1.set(q)
                     self.kv2.set(ct)
-                    o = np.exp(self.pdf.evaluate() - self.pdf.normalization())
+                    o = self.obs.evaluate()
                     coslist.append(o)
                 obs.append(coslist)
             obs = np.array(obs).T
