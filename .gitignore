@@ -7,12 +7,12 @@
 # *.pkl
 
 #results
-results/
+*/results/
+*.json
 
 #cache
 */__pycache__/
 *.pyc
-
-.*/
+.pytest_cache/
 
 *.egg-info/
