@@ -2,8 +2,8 @@
 
 from distutils.core import setup
 
-setup(name='publik',
+setup(name='redist',
       version='0.0',
       author='Lorenz Gaertner',
-      packages=['publik'],
+      packages=['redist'],
      )

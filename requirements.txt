@@ -8,3 +8,4 @@ seaborn
 numexpr
 iminuit
 pytest
+jinja2

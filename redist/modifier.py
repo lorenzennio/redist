@@ -6,7 +6,7 @@ import numpy as np
 import scipy as sp
 import json
 import pyhf
-from publik import custom_modifier
+from redist import custom_modifier
 
 class Modifier():
     """

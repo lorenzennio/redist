@@ -1,5 +1,5 @@
 import numpy as np
-from publik import modifier
+from redist import modifier
 import knunu_utils
 
 from Bayesian_pyhf import infer
@@ -24,8 +24,7 @@ priorDict_conjugate
 
 n_draws = 10000
 with infer.model(model, unconstr_priors, alt_yields):
-    # step = pm.Metropolis()
-    post_data = pm.sample(draws=n_draws)#, step=step, tune=1000)
+    post_data = pm.sample(draws=n_draws, tune=1500)
     post_pred = pm.sample_posterior_predictive(post_data)
     prior_pred = pm.sample_prior_predictive(n_draws)
 

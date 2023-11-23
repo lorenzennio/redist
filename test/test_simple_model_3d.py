@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 import pyhf
-from publik import modifier
+from redist import modifier
 
 def null_dist(x, y, a=1., b=1.):
     return a*x**2 + b*y**2

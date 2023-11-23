@@ -1,9 +1,9 @@
 import numpy as np
 import matplotlib
-matplotlib.style.use('publik.style')
+matplotlib.style.use('redist.style')
 import matplotlib.pyplot as plt
 import seaborn as sns
-from publik import modifier
+from redist import modifier
 
 def dists(cmod, alt_pars=(), lims=None, labels = [], plot_dists=True, plot_weights=False):
     if len(cmod.bins) == 1:
