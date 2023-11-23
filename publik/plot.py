@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from publik import modifier
 
-def dists(cmod, alt_pars, lims=None, labels = [], plot_dists=True, plot_weights=False):
+def dists(cmod, alt_pars=(), lims=None, labels = [], plot_dists=True, plot_weights=False):
     if len(cmod.bins) == 1:
         fig, ax = _dists1d(cmod, alt_pars, lims, labels, plot_dists, plot_weights)
         
@@ -21,25 +21,36 @@ def _dists1d(cmod, alt_pars, lims, labels, plot_dists, plot_weights):
     
     null = modifier.bintegrate(cmod.null_dist, cmod.bins)
     alt = modifier.bintegrate(cmod.alt_dist, cmod.bins, tuple(alt_pars))
-    
-    fig, ax = plt.subplots()
-    
-    if plot_dists:
-        ax.plot(x, cmod.null_dist(x), 'C1',label='null')
-        ax.plot(x, cmod.alt_dist(x, *alt_pars), 'C2', label='alt')
+        
+    if plot_dists and plot_weights:
+        fig, ax = plt.subplots(1,2, figsize=(14,5))
+        axdist, axw = ax
+    else:   
+        fig, ax = plt.subplots(figsize=(7,5))
+        if plot_dists:
+            axdist = ax
+        elif plot_weights:
+            axw = ax
 
-        ax.stairs(null, cmod.bins[0],       color='C1', linewidth=1.5)
-        ax.stairs(alt, cmod.bins[0],        color='C2', linewidth=1.5)
+    if plot_dists:
+        axdist.set_title('distributions')
+        axdist.plot(x, cmod.null_dist(x), 'C1',label='null')
+        axdist.plot(x, cmod.alt_dist(x, *alt_pars), 'C2', label='alternative')
+
+        axdist.stairs(null, cmod.bins[0],       color='C1', linewidth=1.5)
+        axdist.stairs(alt, cmod.bins[0],        color='C2', linewidth=1.5)
+        axdist.legend()
     
     if plot_weights:
-        ax.plot(x, np.divide(cmod.alt_dist(x, *alt_pars),cmod.null_dist(x)), 'C3', label='weights')
-        ax.stairs(alt/null, cmod.bins[0],   color='C3', linewidth=1.5)
-        ax.set_ylim(0, 1.5*max(alt/null))
+        axw.set_title('weights')
+        axw.plot(x, np.divide(cmod.alt_dist(x, *alt_pars),cmod.null_dist(x)), 'C3', label='weights')
+        axw.stairs(alt/null, cmod.bins[0],   color='C3', linewidth=1.5)
+        axw.set_ylim(0, 1.5*max(alt/null))
+        axw.legend()
         
     if labels:
-        ax.set_xlabel(labels[0])
-    
-    plt.legend()
+        for a in ax:
+            a.set_xlabel(labels[0])
     
     return fig, ax
     
