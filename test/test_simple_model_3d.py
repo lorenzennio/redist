@@ -15,7 +15,7 @@ class TestSimpleModel:
     
     binning = [xbinning, ybinning]
     
-    ones = np.ones((4,len(ybinning)-1,len(xbinning)-1))
+    ones = np.ones((4,len(xbinning)-1,len(ybinning)-1))
     mapping_dist = np.array([m*(4-i) for i,m in enumerate(ones)])
     mapping_dist[0,:,1] = 2
     mapping_dist[1,:,2] = 4
@@ -98,16 +98,16 @@ class TestSimpleModel:
         
         init[0] = 4.
         init[1] = 1.
-        assert list(self.model.expected_actualdata(init)) == [93.18667255533585, 106.2075402853109, 128.75726311467082, 206.14632294135367]
+        assert list(self.model.expected_actualdata(init)) == [87.31293547591132, 106.2242274556989, 122.56775971774324, 206.14632294135367]
         
         init[0] = 3.
         init[1] = 2.
-        assert list(self.model.expected_actualdata(init)) == [101.06222418511194, 113.7358467617703, 131.25242103822362, 208.71544098045123]
+        assert list(self.model.expected_actualdata(init)) == [95.77097849197045, 115.4080758185663, 127.52258657258108, 208.71544098045123]
         
         init[0] = 1.5
         init[1] = 2.5
-        assert list(self.model.expected_actualdata(init)) == [87.93777581488806, 101.7641532382297, 123.24757896177638, 205.28455901954877]
+        assert list(self.model.expected_actualdata(init)) == [84.22902150802956, 104.59192418143371, 122.47741342741892, 205.28455901954877]
 
     def test_best_fit(self):
         print(self.best_fit)
-        assert pytest.approx(self.best_fit, 1e-4) == [3.998362130907288, 1.0011274672970902, 1.0, 1.0, 0.9999935039181376, 1.0000097963570187, 0.9999999030164363]
+        assert pytest.approx(self.best_fit, 1e-4) == [3.9934300731573447, 1.0042052272268653, 1.0, 1.0, 0.9999715712033223, 0.9999872734133132, 1.0000046408988705]

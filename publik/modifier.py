@@ -120,7 +120,7 @@ class Modifier():
         weights[np.isnan(weights)] = 1.
         
         #flatten the weights
-        weights = weights.reshape(-1)
+        weights = weights.reshape(-1, order='F')
 
         return weights
         
