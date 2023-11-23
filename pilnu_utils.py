@@ -10,9 +10,6 @@ def analysis():
         EOS analysis instance
     """
 
-    # form factor expansion f+_0,1,2 are expansion parameters up to 2nd order
-    # there is no f0_0 because of a constriant which removes one parameter
-
     analysis_args = {
         'priors': [
             { 'parameter': 'B->D::alpha^f+_0@BSZ2015', 'min':  0.0, 'max':  1.0, 'type': 'uniform' },
