@@ -117,7 +117,7 @@ def map(cmod):
     cmap = sns.color_palette("ch:s=-.2,r=.6", as_cmap=True)
 
     # Draw the heatmap with the mask and correct aspect ratio
-    sns.heatmap(cmod.map, cmap=cmap, annot=True, annot_kws={"fontsize":7},
+    sns.heatmap(cmod.map, cmap=cmap, annot=True, annot_kws={"fontsize":4, 'rotation':45},
                 square=True, linewidths=.5, ax=ax)
 
     ax.set_xlabel('Kinematic bins')
