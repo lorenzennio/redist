@@ -13,10 +13,10 @@ model, alt_yields = modifier.load('pilnu_model.json', alt.distribution, null.dis
 
 # Perform the sampling
 unconstr_priors = {
-    'mu':  {'type': 'Normal_Unconstrained', 'mu': [1.], 'sigma': [1e-10]},
-    'cvl': {'type': 'Uniform_Unconstrained', 'lower': [0.], 'upper': [2.]},
-    'csl': {'type': 'Uniform_Unconstrained', 'lower': [0.], 'upper': [2.]},
-    'ct' : {'type': 'Uniform_Unconstrained', 'lower': [0.], 'upper': [2.]}
+    'mu':  {'type': 'Normal_Unconstrained',  'mu':    [ 1.0], 'sigma': [1e-10]},
+    'cvl': {'type': 'Uniform_Unconstrained', 'lower': [-0.5], 'upper': [2.]},
+    'csl': {'type': 'Uniform_Unconstrained', 'lower': [-0.5], 'upper': [2.]},
+    'ct' : {'type': 'Uniform_Unconstrained', 'lower': [-0.5], 'upper': [2.]}
 }
 
 priorDict_conjugate = prepare_inference.build_priorDict(model, unconstr_priors)
