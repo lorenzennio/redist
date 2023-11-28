@@ -33,25 +33,29 @@ def _dists1d(cmod, alt_pars, lims, labels, plot_dists, plot_weights):
             axw = ax
 
     if plot_dists:
-        axdist.set_title('distributions')
         axdist.plot(x, cmod.null_dist(x), 'C1',label='null')
         axdist.plot(x, cmod.alt_dist(x, *alt_pars), 'C2', label='alternative')
 
         axdist.stairs(null, cmod.bins[0],       color='C1', linewidth=1.5)
         axdist.stairs(alt, cmod.bins[0],        color='C2', linewidth=1.5)
         axdist.legend()
+        
+        if labels:
+            axdist.set_xlabel(labels[0])
+            axdist.set_ylabel(labels[1])
+        
     
     if plot_weights:
-        axw.set_title('weights')
         axw.plot(x, np.divide(cmod.alt_dist(x, *alt_pars),cmod.null_dist(x)), 'C3', label='weights')
         axw.stairs(alt/null, cmod.bins[0],   color='C3', linewidth=1.5)
         axw.set_ylim(0, 1.5*max(alt/null))
         axw.legend()
         
-    if labels:
-        for a in ax:
-            a.set_xlabel(labels[0])
-    
+        if labels:
+            axw.set_xlabel(labels[0])
+            axw.set_ylabel('Weights')
+            
+
     return fig, ax
     
 def _dists2d(cmod, alt_pars, lims, labels, plot_dists, plot_weights):
@@ -118,7 +122,7 @@ def map(cmod):
 
     # Draw the heatmap with the mask and correct aspect ratio
     sns.heatmap(cmod.map, cmap=cmap, annot=True, annot_kws={"fontsize":4, 'rotation':45},
-                square=True, linewidths=.5, ax=ax)
+                cbar_kws={'shrink': 0.5}, square=True, linewidths=.5, ax=ax)
 
     ax.set_xlabel('Kinematic bins')
     ax.set_ylabel('Fitting bins')
