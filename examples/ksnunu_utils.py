@@ -9,35 +9,19 @@ def analysis():
     Returns:
         EOS analysis instance
     """
-
-    # form factor expansion f+_0,1,2 are expansion parameters up to 2nd order
-    # there is no f0_0 because of a constriant which removes one parameter
-
-    parameters = [
-        0.33772497529184886, -0.87793473613271, -0.07935870922121949, 
-        0.3719622997220613, 0.07388594710238389, 0.327935912834808, 
-        -0.9490004115927961, -0.23146429907794228
-        ]
-    paramerror = [
-        0.010131234226468245, 0.09815140228051167, 0.26279803480131697, 
-        0.07751034526769873, 0.14588095119443809, 0.019809720318176644, 
-        0.16833757660616938, 0.36912754148836896
-        ]
-    sigma = 15
     analysis_args = {
         'priors': [
-            { 'parameter': 'B->K::alpha^f+_0@BSZ2015', 'min': parameters[0]-sigma*paramerror[0], 'max': parameters[0]+sigma*paramerror[0], 'type': 'uniform' },
-            { 'parameter': 'B->K::alpha^f+_1@BSZ2015', 'min': parameters[1]-sigma*paramerror[1], 'max': parameters[1]+sigma*paramerror[1], 'type': 'uniform' },
-            { 'parameter': 'B->K::alpha^f+_2@BSZ2015', 'min': parameters[2]-sigma*paramerror[2], 'max': parameters[2]+sigma*paramerror[2], 'type': 'uniform' },
-            { 'parameter': 'B->K::alpha^f0_1@BSZ2015', 'min': parameters[3]-sigma*paramerror[3], 'max': parameters[3]+sigma*paramerror[3], 'type': 'uniform' },
-            { 'parameter': 'B->K::alpha^f0_2@BSZ2015', 'min': parameters[4]-sigma*paramerror[4], 'max': parameters[4]+sigma*paramerror[4], 'type': 'uniform' },
-            { 'parameter': 'B->K::alpha^fT_0@BSZ2015', 'min': parameters[5]-sigma*paramerror[5], 'max': parameters[5]+sigma*paramerror[5], 'type': 'uniform' },
-            { 'parameter': 'B->K::alpha^fT_1@BSZ2015', 'min': parameters[6]-sigma*paramerror[6], 'max': parameters[6]+sigma*paramerror[6], 'type': 'uniform' },
-            { 'parameter': 'B->K::alpha^fT_2@BSZ2015', 'min': parameters[7]-sigma*paramerror[7], 'max': parameters[7]+sigma*paramerror[7], 'type': 'uniform' }
+            { 'parameter': 'B->K^*::alpha^V_0@BSZ2015'  , 'min': -10, 'max': 10, 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^V_1@BSZ2015'  , 'min': -10, 'max': 10, 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^V_2@BSZ2015'  , 'min': -10, 'max': 10, 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^A1_0@BSZ2015' , 'min': -10, 'max': 10, 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^A1_1@BSZ2015' , 'min': -10, 'max': 10, 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^A1_2@BSZ2015' , 'min': -10, 'max': 10, 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^A12_1@BSZ2015', 'min': -10, 'max': 10, 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^A12_2@BSZ2015', 'min': -10, 'max': 10, 'type': 'uniform' }
         ],
         'likelihood': [
-            'B->K::f_0+f_++f_T@FLAG:2021A',
-            'B->K::f_0+f_++f_T@HPQCD:2022A'
+            'B->K^*::FormFactors[parametric,LCSRLattice]@GKvD:2018A'
         ]
     }
 
@@ -87,33 +71,31 @@ class alt_pred:
         k = eos.Kinematics({'q2': 0.})
         o = eos.Options(**{'form-factors': 'BSZ2015', 'model': 'WET'})
         
-        self.kv1 = k['q2'                      ]
-        self.wc1 = p['sbnunu::Re{cVL}'         ]
-        self.wc2 = p['sbnunu::Re{cSL}'         ]
-        self.wc3 = p['sbnunu::Re{cTL}'         ]
-        self.hv1 = p['B->K::alpha^f+_0@BSZ2015']
-        self.hv2 = p['B->K::alpha^f+_1@BSZ2015']
-        self.hv3 = p['B->K::alpha^f+_2@BSZ2015']
-        self.hv4 = p['B->K::alpha^f0_1@BSZ2015']
-        self.hv5 = p['B->K::alpha^f0_2@BSZ2015']
-        self.hv6 = p['B->K::alpha^fT_0@BSZ2015']
-        self.hv7 = p['B->K::alpha^fT_1@BSZ2015']
-        self.hv8 = p['B->K::alpha^fT_2@BSZ2015']
+        self.kv1 = k['q2'                         ]
+        self.wc1 = p['sbnunu::Re{cVL}'            ]
+        self.wc2 = p['sbnunu::Re{cVR}'            ]
+        self.hv1 = p['B->K^*::alpha^V_0@BSZ2015'  ]
+        self.hv2 = p['B->K^*::alpha^V_1@BSZ2015'  ]
+        self.hv3 = p['B->K^*::alpha^V_2@BSZ2015'  ]
+        self.hv4 = p['B->K^*::alpha^A1_0@BSZ2015' ]
+        self.hv5 = p['B->K^*::alpha^A1_1@BSZ2015' ]
+        self.hv6 = p['B->K^*::alpha^A1_2@BSZ2015' ]
+        self.hv7 = p['B->K^*::alpha^A12_1@BSZ2015']
+        self.hv8 = p['B->K^*::alpha^A12_2@BSZ2015']
         
         self.obs = eos.Observable.make('B->K^*nunu::dBR/dq2', p, k, o)
 
-    def distribution(self, q2, cvl, csl, ctl, fp0, fp1, fp2, f01, f02, fT0, fT1, fT2):
+    def distribution(self, q2, cvl, cvr, v0, v1, v2, a10, a11, a12, a121, a122):
         self.wc1.set(cvl)
-        self.wc2.set(csl)
-        self.wc3.set(ctl)
-        self.hv1.set(fp0)
-        self.hv2.set(fp1)
-        self.hv3.set(fp2)
-        self.hv4.set(f01)
-        self.hv5.set(f02)
-        self.hv6.set(fT0)
-        self.hv7.set(fT1)
-        self.hv8.set(fT2)
+        self.wc2.set(cvr)
+        self.hv1.set(v0  )
+        self.hv2.set(v1  )
+        self.hv3.set(v2  )
+        self.hv4.set(a10 )
+        self.hv5.set(a11 )
+        self.hv6.set(a12 )
+        self.hv7.set(a121)
+        self.hv8.set(a122)
 
         if isinstance(q2, numbers.Number):
             self.kv1.set(q2)
