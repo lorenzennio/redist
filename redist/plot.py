@@ -91,13 +91,13 @@ def _dists2d(cmod, alt_pars, lims, labels, plot_dists, plot_weights):
         axnull.set_title('null distribution')
         im = axnull.imshow(Znull_bin, cmap='viridis', extent=extent, interpolation=None, origin='lower', aspect='auto') 
         cset = axnull.contour(X, Y, Znull, 10, linewidths=2, cmap='Oranges', extent=extent)
-        axnull.clabel(cset, inline=True, fmt='%1.1f', fontsize=10)
+        # axnull.clabel(cset, inline=True, fmt='%1.1f', fontsize=10)
         fig.colorbar(im)
         
         axalt.set_title('alternative distribution')
         im = axalt.imshow(Zalt_bin, cmap='viridis', extent=extent, interpolation=None, origin='lower', aspect='auto') 
         cset = axalt.contour(X, Y, Zalt, 10, linewidths=2, cmap='Oranges', extent=extent)
-        axalt.clabel(cset, inline=True, fmt='%1.1f', fontsize=10)
+        # axalt.clabel(cset, inline=True, fmt='%1.1f', fontsize=10)
         fig.colorbar(im)
 
     if plot_weights:
