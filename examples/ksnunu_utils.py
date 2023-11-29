@@ -74,6 +74,9 @@ class alt_pred:
         self.kv1 = k['q2'                         ]
         self.wc1 = p['sbnunu::Re{cVL}'            ]
         self.wc2 = p['sbnunu::Re{cVR}'            ]
+        self.wc3 = p['sbnunu::Re{cSL}'            ]
+        self.wc4 = p['sbnunu::Re{cSR}'            ]
+        self.wc5 = p['sbnunu::Re{cTL}'            ]
         self.hv1 = p['B->K^*::alpha^V_0@BSZ2015'  ]
         self.hv2 = p['B->K^*::alpha^V_1@BSZ2015'  ]
         self.hv3 = p['B->K^*::alpha^V_2@BSZ2015'  ]
@@ -85,9 +88,12 @@ class alt_pred:
         
         self.obs = eos.Observable.make('B->K^*nunu::dBR/dq2', p, k, o)
 
-    def distribution(self, q2, cvl, cvr, v0, v1, v2, a10, a11, a12, a121, a122):
+    def distribution(self, q2, cvl, cvr, csl, csr, ctl, v0, v1, v2, a10, a11, a12, a121, a122):
         self.wc1.set(cvl)
         self.wc2.set(cvr)
+        self.wc3.set(csl)
+        self.wc4.set(csr)
+        self.wc5.set(ctl)
         self.hv1.set(v0  )
         self.hv2.set(v1  )
         self.hv3.set(v2  )
