@@ -58,8 +58,7 @@ class TestSimpleModel:
                 "type": "custom",
                 "data":
                     {
-                        "expr": "weight_function",
-                        "ibin": [0, 1]
+                        "expr": "custom_weight_fn",
                     }
               }
 

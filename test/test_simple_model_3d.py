@@ -68,8 +68,7 @@ class TestSimpleModel:
                     "type": "custom",
                     "data":
                         {
-                            "expr": "weight_function",
-                            "ibin": [i for i in range(len(mapping_dist))]
+                            "expr": "custom_weight_fn",
                         }
                 }
 
