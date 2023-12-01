@@ -1,6 +1,8 @@
 import numpy as np
 import eos
 import numbers
+import yaml
+from yaml.loader import SafeLoader
 
 def analysis():
     """
@@ -9,6 +11,9 @@ def analysis():
     Returns:
         EOS analysis instance
     """
+    with open('ksnunu_constraint.yaml', 'r') as f:
+        constr = yaml.load(f, Loader=SafeLoader)
+
     analysis_args = {
         'priors': [
             { 'parameter': 'B->K^*::alpha^V_0@BSZ2015'  , 'min': -10, 'max': 10, 'type': 'uniform' },
@@ -20,8 +25,8 @@ def analysis():
             { 'parameter': 'B->K^*::alpha^A12_1@BSZ2015', 'min': -10, 'max': 10, 'type': 'uniform' },
             { 'parameter': 'B->K^*::alpha^A12_2@BSZ2015', 'min': -10, 'max': 10, 'type': 'uniform' }
         ],
+        'manual_constraints': constr,
         'likelihood': [
-            'B->K^*::FormFactors[parametric,LCSRLattice]@GKvD:2018A'
         ]
     }
 
