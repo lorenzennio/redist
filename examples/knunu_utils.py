@@ -88,9 +88,11 @@ class alt_pred:
         o = eos.Options(**{'form-factors': 'BSZ2015', 'model': 'WET'})
         
         self.kv1 = k['q2'                      ]
-        self.wc1 = p['sbnunu::Re{cVL}'         ]
-        self.wc2 = p['sbnunu::Re{cSL}'         ]
-        self.wc3 = p['sbnunu::Re{cTL}'         ]
+        self.wc1 = p['sbnunu::Re{cVL}'            ]
+        self.wc2 = p['sbnunu::Re{cVR}'            ]
+        self.wc3 = p['sbnunu::Re{cSL}'            ]
+        self.wc4 = p['sbnunu::Re{cSR}'            ]
+        self.wc5 = p['sbnunu::Re{cTL}'            ]
         self.hv1 = p['B->K::alpha^f+_0@BSZ2015']
         self.hv2 = p['B->K::alpha^f+_1@BSZ2015']
         self.hv3 = p['B->K::alpha^f+_2@BSZ2015']
@@ -102,10 +104,12 @@ class alt_pred:
         
         self.obs = eos.Observable.make('B->Knunu::dBR/dq2', p, k, o)
 
-    def distribution(self, q2, cvl, csl, ctl, fp0, fp1, fp2, f01, f02, fT0, fT1, fT2):
+    def distribution(self, q2, cvl, cvr, csl, csr, ctl, fp0, fp1, fp2, f01, f02, fT0, fT1, fT2):
         self.wc1.set(cvl)
-        self.wc2.set(csl)
-        self.wc3.set(ctl)
+        self.wc2.set(cvr)
+        self.wc3.set(csl)
+        self.wc4.set(csr)
+        self.wc5.set(ctl)
         self.hv1.set(fp0)
         self.hv2.set(fp1)
         self.hv3.set(fp2)
