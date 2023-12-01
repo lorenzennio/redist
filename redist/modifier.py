@@ -13,7 +13,10 @@ class Modifier():
     Modifier implementation to reweight historgram according to the ratio of 
     a null and an alternative distribution. 
     """
-    def __init__(self, new_pars, alt_dist, null_dist, map, bins):
+    def __init__(self, new_pars, alt_dist, null_dist, map, bins, name = None):
+        # store name
+        self.name = name if name else 'custom'
+        
         # store null and alternative distributions
         self.null_dist = null_dist
         self.alt_dist  = alt_dist
@@ -40,10 +43,10 @@ class Modifier():
         Build expanded pyhf modifier set
         """
         return custom_modifier.add(
-            'custom', 
+            self.name, 
             list(self.unco_pars.keys()), 
             self.unco_pars, 
-            namespace = {'weight_function': self.weight_func}
+            namespace = {self.name + '_weight_fn': self.weight_func}
             )
         
     def _separate_pars(self, new_pars):
@@ -134,9 +137,11 @@ class Modifier():
                                 
         weights = self.get_weights(pars)
         
-        def func(ibins):
+        def func(mask):
             results = self.map @ (weights - 1)
-            return np.array([results[i] for i in ibins])
+            out = np.zeros(len(mask))
+            np.place(out, mask, results)
+            return out
         
         self.cache[key] = func
         
@@ -196,6 +201,7 @@ def save(file, spec, cmod, data=None):
     """
     d = {
         'spec': spec, 
+        'name': cmod.name,
         'new_pars': cmod.new_pars,
         'map':  cmod.map.tolist(),
         'bins': cmod.bins if isinstance(cmod.bins,list) else cmod.bins.tolist()
@@ -215,21 +221,49 @@ def load(file, alt_dist, null_dist, return_modifier=False, return_data=False):
         
     new_pars = _read_pars(d['new_pars'])
     
-    cmod = Modifier(new_pars, alt_dist, null_dist, d['map'], d['bins'])
+    cmod = Modifier(new_pars, alt_dist, null_dist, d['map'], d['bins'], name=d['name'])
     
     model = pyhf.Model(d['spec'], validate=False, batch_size=None, modifier_set=cmod.expanded_pyhf)
-
-    to_return = (model,)
-    if return_modifier:
-        to_return = to_return + (cmod,)
-    if return_data:
-        to_return = to_return +  (d['data'],)
         
     if return_modifier and return_data: return model, cmod, d['data']
     if return_modifier: return model, cmod
     if return_data: return model, d['data']
     return model
 
+def combine(files, alt_dists, null_dists, return_data=False):
+    models = []
+    cmods  = []
+    datas  = []
+    for f, a, n in zip(files, alt_dists, null_dists):
+        m, c, d = load(f, a, n, return_modifier=True, return_data=True)
+        models.append(m)
+        cmods.append(c)
+        datas.append(d + m.config.auxdata)
+    
+    workspaces = []
+    for m, c, d in zip(models, cmods, datas):
+        workspaces.append(pyhf.Workspace.build(m, d, c.name, validate=False))
+    
+    comb_ws = None
+    for w in workspaces:
+        if comb_ws:
+            comb_ws = pyhf.Workspace.combine(comb_ws, w, validate=False)
+        else:
+            comb_ws = w
+    
+    modifier_set = None
+    for c in cmods:
+        if modifier_set:
+            modifier_set = modifier_set | c.expanded_pyhf
+        else:
+            modifier_set = c.expanded_pyhf
+    
+    model = pyhf.Model(comb_ws, validate=False, batch_size=None, modifier_set=modifier_set)
+
+    if return_data: return model, comb_ws.data(model)
+    return model
+    ...
+    
 def _read_pars(json_input):
     """
     Parse lists to tuples for pyhf.

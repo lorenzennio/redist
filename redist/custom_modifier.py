@@ -5,7 +5,9 @@ from pyhf import get_backend
 from pyhf import events
 
 def add(funcname, deps, newparams, input_set = None, namespace={}):
+    
     globals().update(namespace)
+    
     def make_func(expression,ibin):
         def func(dep_par_array):
             if expression in globals():
@@ -69,7 +71,7 @@ def add(funcname, deps, newparams, input_set = None, namespace={}):
             self.builder_data[key][sample]['data']['mask'] += moddata['mask']
             if thismod:
                 if thismod['name'] != funcname:
-                    self.builder_data['funcs'].setdefault(thismod['name'],[thismod['data']['expr'],thismod['data']['ibin']])
+                    self.builder_data['funcs'].setdefault(thismod['name'],[thismod['data']['expr'],self.builder_data[key][sample]['data']['mask']])
                 self.required_parsets = {k:[_allocate_new_param(v)] for k,v in newparams.items()}
 
         def finalize(self):
