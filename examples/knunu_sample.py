@@ -13,10 +13,12 @@ model, alt_yields = modifier.load('knunu_model.json', alt.distribution, null.dis
 
 # Perform the sampling
 unconstr_priors = {
-    'mu':  {'type': 'Normal_Unconstrained', 'mu': [1.], 'sigma': [1e-10]},
-    'cvl': {'type': 'Uniform_Unconstrained', 'lower': [2.], 'upper': [10.]},
-    'csl': {'type': 'Uniform_Unconstrained', 'lower': [0.], 'upper': [5.]},
-    'ctl': {'type': 'Uniform_Unconstrained', 'lower': [0.], 'upper': [5.]}
+    'mu':  {'type': 'Normal_Unconstrained',  'mu':    [1.], 'sigma': [1e-10]},
+    'cvl': {'type': 'Uniform_Unconstrained', 'lower': [3.], 'upper': [7.]},
+    'cvr': {'type': 'Normal_Unconstrained',  'mu':    [0.], 'sigma': [1e-10]},
+    'csl': {'type': 'Uniform_Unconstrained', 'lower': [0.], 'upper': [3.]},
+    'csr': {'type': 'Normal_Unconstrained',  'mu':    [0.], 'sigma': [1e-10]},
+    'ctl': {'type': 'Uniform_Unconstrained', 'lower': [0.], 'upper': [3.]}
 }
 
 priorDict_conjugate = prepare_inference.build_priorDict(model, unconstr_priors)
@@ -28,6 +30,6 @@ with infer.model(model, unconstr_priors, alt_yields):
     post_pred = pm.sample_posterior_predictive(post_data)
     prior_pred = pm.sample_prior_predictive(n_draws)
 
-post_data.to_json( 'samples/nuts_post_data.json')
-post_pred.to_json( 'samples/nuts_post_pred.json')
-prior_pred.to_json('samples/nuts_prior_pred.json')
+post_data.to_json( 'samples/knunu_post_data.json')
+post_pred.to_json( 'samples/knunu_post_pred.json')
+prior_pred.to_json('samples/knunu_prior_pred.json')
