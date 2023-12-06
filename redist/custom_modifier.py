@@ -3,26 +3,19 @@ import pyhf
 from pyhf.parameters import ParamViewer
 from pyhf import get_backend
 from pyhf import events
+from typing import Any, Callable, Sequence
 
-def add(funcname, deps, newparams, input_set = None, namespace={}):
+def add(funcname, dep_pars, newparams, input_set = None, namespace={}):
     
     globals().update(namespace)
     
-    def make_func(expression,ibin):
-        def func(dep_par_array):
+    def make_func(expression: str, deps: list[str]) -> Callable[[Sequence[float]], Any]:
+        def func(d: Sequence[float]) -> Any:
             if expression in globals():
-                parvals = dict(zip(deps,dep_par_array))
-                to_integrate = globals()[expression](parvals)
-            else:
-                def to_integrate(xi):
-                    parvals = dict(zip(deps,dep_par_array))
-                    parvals['x'] = xi
-                    return numexpr.evaluate(
-                        expression,
-                        global_dict=parvals
-                    )
-            probs = to_integrate(ibin)
-            return probs
+                parvals = dict(zip(dep_pars, d))
+                return globals()[expression](parvals)(deps)
+            return numexpr.evaluate(expression, local_dict=dict(zip(deps, d)))
+
         return func
 
     def _allocate_new_param(p):
@@ -78,7 +71,7 @@ def add(funcname, deps, newparams, input_set = None, namespace={}):
             self.funcs = [make_func(f,i) for f,i in builder_data['funcs'].values()]
             
             self.batch_size = batch_size
-            pars_for_applier = deps
+            pars_for_applier = dep_pars
             _modnames = [f'{mtype}/{m}' for m, mtype in modifiers]
 
             parfield_shape = (
