@@ -16,14 +16,20 @@ def analysis():
 
     analysis_args = {
         'priors': [
-            { 'parameter': 'B->K^*::alpha^V_0@BSZ2015'  , 'min': -10, 'max': 10, 'type': 'uniform' },
             { 'parameter': 'B->K^*::alpha^V_1@BSZ2015'  , 'min': -10, 'max': 10, 'type': 'uniform' },
             { 'parameter': 'B->K^*::alpha^V_2@BSZ2015'  , 'min': -10, 'max': 10, 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^A1_0@BSZ2015' , 'min': -10, 'max': 10, 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^A0_1@BSZ2015' , 'min': -10, 'max': 10, 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^A0_2@BSZ2015' , 'min': -10, 'max': 10, 'type': 'uniform' },
             { 'parameter': 'B->K^*::alpha^A1_1@BSZ2015' , 'min': -10, 'max': 10, 'type': 'uniform' },
             { 'parameter': 'B->K^*::alpha^A1_2@BSZ2015' , 'min': -10, 'max': 10, 'type': 'uniform' },
             { 'parameter': 'B->K^*::alpha^A12_1@BSZ2015', 'min': -10, 'max': 10, 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^A12_2@BSZ2015', 'min': -10, 'max': 10, 'type': 'uniform' }
+            { 'parameter': 'B->K^*::alpha^A12_2@BSZ2015', 'min': -10, 'max': 10, 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^T1_1@BSZ2015' , 'min': -10, 'max': 10, 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^T1_2@BSZ2015' , 'min': -10, 'max': 10, 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^T2_1@BSZ2015' , 'min': -10, 'max': 10, 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^T2_2@BSZ2015' , 'min': -10, 'max': 10, 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^T23_1@BSZ2015', 'min': -10, 'max': 10, 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^T23_2@BSZ2015', 'min': -10, 'max': 10, 'type': 'uniform' },
         ],
         'manual_constraints': constr,
         'likelihood': [
@@ -76,37 +82,49 @@ class alt_pred:
         k = eos.Kinematics({'q2': 0.})
         o = eos.Options(**{'form-factors': 'BSZ2015', 'model': 'WET'})
         
-        self.kv1 = k['q2'                         ]
-        self.wc1 = p['sbnunu::Re{cVL}'            ]
-        self.wc2 = p['sbnunu::Re{cVR}'            ]
-        self.wc3 = p['sbnunu::Re{cSL}'            ]
-        self.wc4 = p['sbnunu::Re{cSR}'            ]
-        self.wc5 = p['sbnunu::Re{cTL}'            ]
-        self.hv1 = p['B->K^*::alpha^V_0@BSZ2015'  ]
-        self.hv2 = p['B->K^*::alpha^V_1@BSZ2015'  ]
-        self.hv3 = p['B->K^*::alpha^V_2@BSZ2015'  ]
-        self.hv4 = p['B->K^*::alpha^A1_0@BSZ2015' ]
-        self.hv5 = p['B->K^*::alpha^A1_1@BSZ2015' ]
-        self.hv6 = p['B->K^*::alpha^A1_2@BSZ2015' ]
-        self.hv7 = p['B->K^*::alpha^A12_1@BSZ2015']
-        self.hv8 = p['B->K^*::alpha^A12_2@BSZ2015']
+        self.kv1  = k['q2'                         ]
+        self.wc1  = p['sbnunu::Re{cVL}'            ]
+        self.wc2  = p['sbnunu::Re{cVR}'            ]
+        self.wc3  = p['sbnunu::Re{cSL}'            ]
+        self.wc4  = p['sbnunu::Re{cSR}'            ]
+        self.wc5  = p['sbnunu::Re{cTL}'            ]
+        self.hv01 = p['B->K^*::alpha^V_1@BSZ2015'  ]
+        self.hv02 = p['B->K^*::alpha^V_2@BSZ2015'  ]
+        self.hv03 = p['B->K^*::alpha^A0_1@BSZ2015' ]
+        self.hv04 = p['B->K^*::alpha^A0_2@BSZ2015' ]
+        self.hv05 = p['B->K^*::alpha^A1_1@BSZ2015' ]
+        self.hv06 = p['B->K^*::alpha^A1_2@BSZ2015' ]
+        self.hv07 = p['B->K^*::alpha^A12_1@BSZ2015']
+        self.hv08 = p['B->K^*::alpha^A12_2@BSZ2015']
+        self.hv09 = p['B->K^*::alpha^T1_1@BSZ2015' ]
+        self.hv10 = p['B->K^*::alpha^T1_2@BSZ2015' ]
+        self.hv11 = p['B->K^*::alpha^T2_1@BSZ2015' ]
+        self.hv12 = p['B->K^*::alpha^T2_2@BSZ2015' ]
+        self.hv13 = p['B->K^*::alpha^T23_1@BSZ2015']
+        self.hv14 = p['B->K^*::alpha^T23_2@BSZ2015']
         
         self.obs = eos.Observable.make('B->K^*nunu::dBR/dq2', p, k, o)
 
-    def distribution(self, q2, cvl, cvr, csl, csr, ctl, v0, v1, v2, a10, a11, a12, a121, a122):
+    def distribution(self, q2, cvl, cvr, csl, csr, ctl, v1, v2, a01, a02, a11, a12, a121, a122, t11, t12, t21, t22, t231, t232):
         self.wc1.set(cvl)
         self.wc2.set(cvr)
         self.wc3.set(csl)
         self.wc4.set(csr)
         self.wc5.set(ctl)
-        self.hv1.set(v0  )
-        self.hv2.set(v1  )
-        self.hv3.set(v2  )
-        self.hv4.set(a10 )
-        self.hv5.set(a11 )
-        self.hv6.set(a12 )
-        self.hv7.set(a121)
-        self.hv8.set(a122)
+        self.hv01.set(v1  )
+        self.hv02.set(v2  )
+        self.hv03.set(a01  )
+        self.hv04.set(a02 )
+        self.hv05.set(a11 )
+        self.hv06.set(a12 )
+        self.hv07.set(a121)
+        self.hv08.set(a122)
+        self.hv09.set(t11)
+        self.hv10.set(t12)
+        self.hv11.set(t21)
+        self.hv12.set(t22)
+        self.hv13.set(t231)
+        self.hv14.set(t232)
 
         if isinstance(q2, numbers.Number):
             self.kv1.set(q2)
