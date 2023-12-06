@@ -27,22 +27,15 @@ def add(funcname, deps, newparams, input_set = None, namespace={}):
 
     def _allocate_new_param(p):
         param_dict = {
-            'paramset_type': 'unconstrained',
+            'paramset_type': p['paramset_type'] if 'paramset_type' in p.keys() else 'unconstrained',
             'n_parameters': 1,
             'is_shared': True,
             'inits': p['inits'],
             'bounds': p['bounds'],
             'is_scalar': True,
             'fixed': False,
+            'auxdata': p['auxdata'] if 'auxdata' in p.keys() else (0.0,),
         }
-        try:
-            if p['paramset_type'] == 'constrained_by_normal':
-                param_dict['paramset_type'] = 'constrained_by_normal'
-                param_dict['auxdata'] = (0.0,)
-                if p['auxdata']:
-                    param_dict['auxdata'] = p['auxdata']
-        except:
-            pass
         return param_dict
     
     class _builder:
