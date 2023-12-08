@@ -1,20 +1,20 @@
 import numexpr
 import pyhf
+import numpy as np
 from pyhf.parameters import ParamViewer
 from pyhf import get_backend
 from pyhf import events
 from typing import Any, Callable, Sequence
 
-def add(funcname, dep_pars, newparams, input_set = None, namespace={}):
+def add(funcname, par_names, newparams, input_set = None, namespace=None):
+    namespace = namespace or {}
     
-    globals().update(namespace)
-    
-    def make_func(expression: str, deps: list[str]) -> Callable[[Sequence[float]], Any]:
-        def func(d: Sequence[float]) -> Any:
-            if expression in globals():
-                parvals = dict(zip(dep_pars, d))
-                return globals()[expression](parvals)(deps)
-            return numexpr.evaluate(expression, local_dict=dict(zip(deps, d)))
+    def make_func(expression: str, namespace = namespace) -> Callable[[Sequence[float]], Any]:
+        def func(deps: Sequence[float]) -> Any:
+            if expression in namespace:
+                parvals = dict(zip(par_names, deps))
+                return namespace[expression](parvals)()
+            return numexpr.evaluate(expression, local_dict=dict(zip(par_names, deps), **namespace))
 
         return func
 
@@ -57,7 +57,7 @@ def add(funcname, dep_pars, newparams, input_set = None, namespace={}):
             self.builder_data[key][sample]['data']['mask'] += moddata['mask']
             if thismod:
                 if thismod['name'] != funcname:
-                    self.builder_data['funcs'].setdefault(thismod['name'],[thismod['data']['expr'],self.builder_data[key][sample]['data']['mask']])
+                    self.builder_data['funcs'].setdefault(thismod['name'],thismod['data']['expr'])
                 self.required_parsets = {k:[_allocate_new_param(v)] for k,v in newparams.items()}
 
         def finalize(self):
@@ -68,10 +68,10 @@ def add(funcname, dep_pars, newparams, input_set = None, namespace={}):
         op_code = 'addition'
 
         def __init__(self, modifiers, pdfconfig, builder_data, batch_size=None):
-            self.funcs = [make_func(f,i) for f,i in builder_data['funcs'].values()]
+            self.funcs = [make_func(f) for f in builder_data['funcs'].values()]
             
             self.batch_size = batch_size
-            pars_for_applier = dep_pars
+            pars_for_applier = par_names
             _modnames = [f'{mtype}/{m}' for m, mtype in modifiers]
 
             parfield_shape = (
@@ -109,18 +109,10 @@ def add(funcname, dep_pars, newparams, input_set = None, namespace={}):
             if not self.param_viewer.index_selection:
                 return
             tensorlib, _ = get_backend()
-            if self.batch_size is None:
-                deps = self.param_viewer.get(pars)
-                results = tensorlib.astensor([f(deps) for f in self.funcs])
-                results = tensorlib.einsum(
-                    'msab,mb->msab', self.custommod_mask, results
-                )
-            else:
-                deps = self.param_viewer.get(pars)
-                results = tensorlib.astensor([f(deps) for f in self.funcs])
-                results = tensorlib.einsum(
-                    'msab,ma->msab', self.custommod_mask, results
-                )
+            deps = self.param_viewer.get(pars)
+            out = tensorlib.astensor([f(deps) for f in self.funcs])
+            results = np.zeros_like(self.custommod_mask)
+            np.place(results, self.custommod_mask, out)
             results = tensorlib.where(
                 self.custommod_mask_bool, results, self.custommod_default
             )

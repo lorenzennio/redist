@@ -136,12 +136,10 @@ class Modifier():
             return self.cache[key]
                                 
         weights = self.get_weights(pars)
+        results = self.map @ (weights - 1)
         
-        def func(mask):
-            results = self.map @ (weights - 1)
-            out = np.zeros(len(mask))
-            np.place(out, mask, results)
-            return out
+        def func():
+            return results
         
         self.cache[key] = func
         
