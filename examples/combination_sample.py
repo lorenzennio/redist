@@ -7,7 +7,7 @@ from Bayesian_pyhf import infer
 from Bayesian_pyhf import prepare_inference
 import pymc as pm
 
-files       = ['knunu_model.json', 'ksnunu_model.json']
+files       = ['knunu_model_1b.json', 'ksnunu_model_1b.json']
 alt_dists   = [knunu_utils.alt_pred().distribution, ksnunu_utils.alt_pred().distribution]
 null_dists  = [knunu_utils.null_pred().distribution, ksnunu_utils.null_pred().distribution]
 
@@ -33,6 +33,6 @@ with infer.model(model, unconstr_priors, yields):
     post_pred = pm.sample_posterior_predictive(post_data)
     prior_pred = pm.sample_prior_predictive(n_draws)
 
-post_data.to_json( 'samples/comb_post_data.json')
-post_pred.to_json( 'samples/comb_post_pred.json')
-prior_pred.to_json('samples/comb_prior_pred.json')
+post_data.to_json( 'samples/comb_1b_post_data.json')
+post_pred.to_json( 'samples/comb_1b_post_pred.json')
+prior_pred.to_json('samples/comb_1b_prior_pred.json')
