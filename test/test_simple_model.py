@@ -1,7 +1,11 @@
+import os 
 import pytest
 import numpy as np
 import pyhf
+import json
 from redist import modifier
+
+dir_path = os.path.dirname(__file__)
 
 def null_dist(x, a=1., h1=2., h2=0.):
     return a*(1+x*h1-x**2*h2)
@@ -19,38 +23,12 @@ class TestSimpleModel:
                 }
 
     cmod = modifier.Modifier(new_params, alt_dist, null_dist, map, [binning])
+    
+    file = dir_path + "/models/simple_model.json"
+    
+    with open(file, 'r') as f:
+        spec = json.load(f)
 
-    spec = {
-        "channels": [
-            {
-            "name": "singlechannel",
-            "samples": [
-                {
-                "name": "signal",
-                "data": [5.0, 10.0],
-                "modifiers": [
-                    {
-                        "name": "mu",
-                        "type": "normfactor",
-                        "data": None
-                    }
-                ]
-                },
-                {
-                "name": "background",
-                "data": [50.0, 60.0],
-                "modifiers": [
-                    {
-                    "name": "uncorr_bkguncrt",
-                    "type": "shapesys",
-                    "data": [5.0, 12.0]
-                    }
-                ]
-                }
-            ]
-            }
-        ]
-        }
     model = pyhf.Model(spec)
     
     custom_mod = {
