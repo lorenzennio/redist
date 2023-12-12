@@ -210,7 +210,7 @@ def save(file, spec, cmod, data=None):
     with open(file, 'w') as f:
         json.dump(d, f, indent=4)
         
-def load(file, alt_dist, null_dist, return_modifier=False, return_data=False):
+def load(file, alt_dist, null_dist, return_modifier=False, return_data=False, **kwargs):
     """
     Load and build model from file
     """
@@ -221,19 +221,19 @@ def load(file, alt_dist, null_dist, return_modifier=False, return_data=False):
     
     cmod = Modifier(new_pars, alt_dist, null_dist, d['map'], d['bins'], name=d['name'])
     
-    model = pyhf.Model(d['spec'], validate=False, batch_size=None, modifier_set=cmod.expanded_pyhf)
+    model = pyhf.Model(d['spec'], validate=False, batch_size=None, modifier_set=cmod.expanded_pyhf, **kwargs)
         
     if return_modifier and return_data: return model, cmod, d['data']
     if return_modifier: return model, cmod
     if return_data: return model, d['data']
     return model
 
-def combine(files, alt_dists, null_dists, return_data=False):
+def combine(files, alt_dists, null_dists, return_data=False, **kwargs):
     models = []
     cmods  = []
     datas  = []
     for f, a, n in zip(files, alt_dists, null_dists):
-        m, c, d = load(f, a, n, return_modifier=True, return_data=True)
+        m, c, d = load(f, a, n, return_modifier=True, return_data=True, **kwargs)
         models.append(m)
         cmods.append(c)
         datas.append(d + m.config.auxdata)
@@ -256,7 +256,7 @@ def combine(files, alt_dists, null_dists, return_data=False):
         else:
             modifier_set = c.expanded_pyhf
     
-    model = pyhf.Model(comb_ws, validate=False, batch_size=None, modifier_set=modifier_set)
+    model = pyhf.Model(comb_ws, validate=False, batch_size=None, modifier_set=modifier_set, **kwargs)
 
     if return_data: return model, comb_ws.data(model)
     return model
