@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib
 matplotlib.style.use('redist.style')
 import matplotlib.pyplot as plt
-import seaborn as sns
 from redist import modifier
 
 def dists(cmod, alt_pars=(), lims=None, labels = [], plot_dists=True, plot_weights=False):
@@ -33,8 +32,8 @@ def _dists1d(cmod, alt_pars, lims, labels, plot_dists, plot_weights):
             axw = ax
 
     if plot_dists:
-        axdist.plot(x, cmod.null_dist(x), 'C1',label='null')
-        axdist.plot(x, cmod.alt_dist(x, *alt_pars), 'C2', label='alternative')
+        # axdist.plot(x, cmod.null_dist(x), 'C1',label='null')
+        # axdist.plot(x, cmod.alt_dist(x, *alt_pars), 'C2', label='alternative')
 
         axdist.stairs(null, cmod.bins[0],       color='C1', linewidth=1.5)
         axdist.stairs(alt, cmod.bins[0],        color='C2', linewidth=1.5)
@@ -113,21 +112,20 @@ def _dists2d(cmod, alt_pars, lims, labels, plot_dists, plot_weights):
     return fig, ax
 
 
-def map(cmod):
+def map(cmod, **imshow_kwargs):
     fig, ax = plt.subplots()
     
-    # Generate a custom diverging colormap
-    # cmap = sns.diverging_palette(230, 20, as_cmap=True)
-    cmap = sns.color_palette("ch:s=-.2,r=.6", as_cmap=True)
-
-    # Draw the heatmap with the mask and correct aspect ratio
-    sns.heatmap(cmod.map, cmap=cmap, annot=True, annot_kws={"fontsize":4, 'rotation':45},
-                cbar_kws={'shrink': 0.5}, square=True, linewidths=.5, ax=ax)
-
+    im = ax.imshow(cmod.map, **imshow_kwargs)
+    
+    # Calculate (height_of_image / width_of_image)
+    im_ratio = cmod.map.shape[0]/cmod.map.shape[1]
+    
+    # Plot vertical colorbar
+    fig.colorbar(im, fraction=0.047*im_ratio)
+    
     ax.set_xlabel('Kinematic bins')
     ax.set_ylabel('Fitting bins')
     
-    plt.tight_layout()
-
     fig.tight_layout()
-    plt.show()
+    
+    return fig, ax
