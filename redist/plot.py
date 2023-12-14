@@ -111,7 +111,7 @@ def _dists2d(cmod, alt_pars, lims, labels, plot_dists, plot_weights):
     
     return fig, ax
 
-
+from matplotlib.ticker import MaxNLocator
 def map(cmod, **imshow_kwargs):
     fig, ax = plt.subplots()
     
@@ -122,6 +122,9 @@ def map(cmod, **imshow_kwargs):
     
     # Plot vertical colorbar
     fig.colorbar(im, fraction=0.047*im_ratio)
+    
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     
     ax.set_xlabel('Kinematic bins')
     ax.set_ylabel('Fitting bins')
