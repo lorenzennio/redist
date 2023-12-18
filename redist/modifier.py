@@ -260,7 +260,6 @@ def combine(files, alt_dists, null_dists, return_data=False, **kwargs):
 
     if return_data: return model, comb_ws.data(model)
     return model
-    ...
     
 def _read_pars(json_input):
     """
@@ -271,3 +270,11 @@ def _read_pars(json_input):
         new_pars[k]['inits'] = tuple(v['inits'])
         new_pars[k]['bounds'] = tuple(tuple(w) for w in v['bounds'])
     return new_pars
+
+def map(target_samples, kinematic_samples, target_bins, kinematic_bins):
+    """
+    Generate mapping distribution from samples.
+    """
+    samples = [target_samples] + list(kinematic_samples)
+    binning = [target_bins] + list(kinematic_bins)
+    return np.histogramdd(samples, bins=binning)[0]
