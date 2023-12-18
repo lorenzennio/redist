@@ -9,7 +9,7 @@ import pymc as pm
 null = knunu_utils.null_pred()
 alt = knunu_utils.alt_pred()
 
-model, alt_yields = modifier.load('knunu_model.json', alt.distribution, null.distribution, return_data=True)
+model, alt_yields = modifier.load('knunu_model.json', alt.distribution, null.distribution, return_data=True, clip_bin_data=3.)
 
 # Perform the sampling
 unconstr_priors = {
