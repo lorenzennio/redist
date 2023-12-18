@@ -15,23 +15,29 @@ def analysis():
         constr = yaml.load(f, Loader=SafeLoader)
 
     analysis_args = {
+        'global_options': { },
+        'manual_constraints': constr,
         'priors': [
-            { 'parameter': 'B->K^*::alpha^V_1@BSZ2015'  , 'min': -10, 'max': 10, 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^V_2@BSZ2015'  , 'min': -10, 'max': 10, 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^A0_0@BSZ2015' , 'min': -10, 'max': 10, 'type': 'uniform' },
             { 'parameter': 'B->K^*::alpha^A0_1@BSZ2015' , 'min': -10, 'max': 10, 'type': 'uniform' },
             { 'parameter': 'B->K^*::alpha^A0_2@BSZ2015' , 'min': -10, 'max': 10, 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^A1_0@BSZ2015' , 'min': -10, 'max': 10, 'type': 'uniform' },
             { 'parameter': 'B->K^*::alpha^A1_1@BSZ2015' , 'min': -10, 'max': 10, 'type': 'uniform' },
             { 'parameter': 'B->K^*::alpha^A1_2@BSZ2015' , 'min': -10, 'max': 10, 'type': 'uniform' },
             { 'parameter': 'B->K^*::alpha^A12_1@BSZ2015', 'min': -10, 'max': 10, 'type': 'uniform' },
             { 'parameter': 'B->K^*::alpha^A12_2@BSZ2015', 'min': -10, 'max': 10, 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^V_0@BSZ2015'  , 'min': -10, 'max': 10, 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^V_1@BSZ2015'  , 'min': -10, 'max': 10, 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^V_2@BSZ2015'  , 'min': -10, 'max': 10, 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^T1_0@BSZ2015' , 'min': -10, 'max': 10, 'type': 'uniform' },
             { 'parameter': 'B->K^*::alpha^T1_1@BSZ2015' , 'min': -10, 'max': 10, 'type': 'uniform' },
             { 'parameter': 'B->K^*::alpha^T1_2@BSZ2015' , 'min': -10, 'max': 10, 'type': 'uniform' },
             { 'parameter': 'B->K^*::alpha^T2_1@BSZ2015' , 'min': -10, 'max': 10, 'type': 'uniform' },
             { 'parameter': 'B->K^*::alpha^T2_2@BSZ2015' , 'min': -10, 'max': 10, 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^T23_0@BSZ2015', 'min': -10, 'max': 10, 'type': 'uniform' },
             { 'parameter': 'B->K^*::alpha^T23_1@BSZ2015', 'min': -10, 'max': 10, 'type': 'uniform' },
             { 'parameter': 'B->K^*::alpha^T23_2@BSZ2015', 'min': -10, 'max': 10, 'type': 'uniform' },
         ],
-        'manual_constraints': constr,
         'likelihood': [
         ]
     }
@@ -89,43 +95,54 @@ class alt_pred:
         self.wc3  = p['sbnunu::Re{cSL}'            ]
         self.wc4  = p['sbnunu::Re{cSR}'            ]
         self.wc5  = p['sbnunu::Re{cTL}'            ]
-        self.hv01 = p['B->K^*::alpha^V_1@BSZ2015'  ]
-        self.hv02 = p['B->K^*::alpha^V_2@BSZ2015'  ]
-        self.hv03 = p['B->K^*::alpha^A0_1@BSZ2015' ]
-        self.hv04 = p['B->K^*::alpha^A0_2@BSZ2015' ]
-        self.hv05 = p['B->K^*::alpha^A1_1@BSZ2015' ]
-        self.hv06 = p['B->K^*::alpha^A1_2@BSZ2015' ]
-        self.hv07 = p['B->K^*::alpha^A12_1@BSZ2015']
-        self.hv08 = p['B->K^*::alpha^A12_2@BSZ2015']
-        self.hv09 = p['B->K^*::alpha^T1_1@BSZ2015' ]
-        self.hv10 = p['B->K^*::alpha^T1_2@BSZ2015' ]
-        self.hv11 = p['B->K^*::alpha^T2_1@BSZ2015' ]
-        self.hv12 = p['B->K^*::alpha^T2_2@BSZ2015' ]
-        self.hv13 = p['B->K^*::alpha^T23_1@BSZ2015']
-        self.hv14 = p['B->K^*::alpha^T23_2@BSZ2015']
+        self.hv01 = p['B->K^*::alpha^V_0@BSZ2015'  ]
+        self.hv02 = p['B->K^*::alpha^V_1@BSZ2015'  ]
+        self.hv03 = p['B->K^*::alpha^V_2@BSZ2015'  ]
+        self.hv04 = p['B->K^*::alpha^A0_0@BSZ2015' ]
+        self.hv05 = p['B->K^*::alpha^A0_1@BSZ2015' ]
+        self.hv06 = p['B->K^*::alpha^A0_2@BSZ2015' ]
+        self.hv07 = p['B->K^*::alpha^A1_0@BSZ2015' ]
+        self.hv08 = p['B->K^*::alpha^A1_1@BSZ2015' ]
+        self.hv09 = p['B->K^*::alpha^A1_2@BSZ2015' ]
+        self.hv10 = p['B->K^*::alpha^A12_1@BSZ2015']
+        self.hv11 = p['B->K^*::alpha^A12_2@BSZ2015']
+        self.hv12 = p['B->K^*::alpha^T1_0@BSZ2015' ]
+        self.hv13 = p['B->K^*::alpha^T1_1@BSZ2015' ]
+        self.hv14 = p['B->K^*::alpha^T1_2@BSZ2015' ]
+        self.hv15 = p['B->K^*::alpha^T2_1@BSZ2015' ]
+        self.hv16 = p['B->K^*::alpha^T2_2@BSZ2015' ]
+        self.hv17 = p['B->K^*::alpha^T23_0@BSZ2015']
+        self.hv18 = p['B->K^*::alpha^T23_1@BSZ2015']
+        self.hv19 = p['B->K^*::alpha^T23_2@BSZ2015']
         
         self.obs = eos.Observable.make('B->K^*nunu::dBR/dq2', p, k, o)
 
-    def distribution(self, q2, cvl, cvr, csl, csr, ctl, v1, v2, a01, a02, a11, a12, a121, a122, t11, t12, t21, t22, t231, t232):
+    def distribution(self, q2, cvl, cvr, csl, csr, ctl, v0, v1, v2, a00, a01, a02, a10, a11, a12, a121, a122, t10, t11, t12, t21, t22, t230, t231, t232):
         self.wc1.set(cvl)
         self.wc2.set(cvr)
         self.wc3.set(csl)
         self.wc4.set(csr)
         self.wc5.set(ctl)
-        self.hv01.set(v1  )
-        self.hv02.set(v2  )
-        self.hv03.set(a01  )
-        self.hv04.set(a02 )
-        self.hv05.set(a11 )
-        self.hv06.set(a12 )
-        self.hv07.set(a121)
-        self.hv08.set(a122)
-        self.hv09.set(t11)
-        self.hv10.set(t12)
-        self.hv11.set(t21)
-        self.hv12.set(t22)
-        self.hv13.set(t231)
-        self.hv14.set(t232)
+        self.hv01.set(v0  )
+        self.hv02.set(v1  )
+        self.hv03.set(v2  )
+        self.hv04.set(a00 )
+        self.hv05.set(a01 )
+        self.hv06.set(a02 )
+        self.hv07.set(a10 )
+        self.hv08.set(a11 )
+        self.hv09.set(a12 )
+        self.hv10.set(a121)
+        self.hv11.set(a122)
+        self.hv12.set(t10 )
+        self.hv13.set(t11 )
+        self.hv14.set(t12 )
+        self.hv15.set(t21 )
+        self.hv16.set(t22 )
+        self.hv17.set(t230)
+        self.hv18.set(t231)
+        self.hv19.set(t232)
+
 
         if isinstance(q2, numbers.Number):
             self.kv1.set(q2)
