@@ -9,7 +9,7 @@ import pymc as pm
 null = knunu_utils.null_pred()
 alt = knunu_utils.alt_pred()
 
-model, alt_yields = modifier.load('knunu_model.json', alt.distribution, null.distribution, return_data=True, clip_bin_data=0.1)
+model, alt_yields = modifier.load('knunu_model_1b.json', alt.distribution, null.distribution, return_data=True, clip_bin_data=0.1)
 
 # Perform the sampling
 unconstr_priors = {
@@ -30,6 +30,6 @@ with infer.model(model, unconstr_priors, alt_yields):
     post_pred = pm.sample_posterior_predictive(post_data)
     prior_pred = pm.sample_prior_predictive(n_draws)
 
-post_data.to_json( 'samples/knunu_post_data.json')
-post_pred.to_json( 'samples/knunu_post_pred.json')
-prior_pred.to_json('samples/knunu_prior_pred.json')
+post_data.to_json( 'samples/knunu_1b_post_data.json')
+post_pred.to_json( 'samples/knunu_1b_post_pred.json')
+prior_pred.to_json('samples/knunu_1b_prior_pred.json')
