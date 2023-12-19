@@ -18,25 +18,25 @@ def analysis():
         'global_options': { },
         'manual_constraints': constr,
         'priors': [
-            { 'parameter': 'B->K^*::alpha^A0_0@BSZ2015' , 'min': -5., 'max': 5., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^A0_1@BSZ2015' , 'min': -5., 'max': 5., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^A0_2@BSZ2015' , 'min': -5., 'max': 5., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^A1_0@BSZ2015' , 'min': -5., 'max': 5., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^A1_1@BSZ2015' , 'min': -5., 'max': 5., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^A1_2@BSZ2015' , 'min': -5., 'max': 5., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^A12_1@BSZ2015', 'min': -5., 'max': 5., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^A12_2@BSZ2015', 'min': -5., 'max': 5., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^V_0@BSZ2015'  , 'min': -5., 'max': 5., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^V_1@BSZ2015'  , 'min': -5., 'max': 5., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^V_2@BSZ2015'  , 'min': -5., 'max': 5., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^T1_0@BSZ2015' , 'min': -5., 'max': 5., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^T1_1@BSZ2015' , 'min': -5., 'max': 5., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^T1_2@BSZ2015' , 'min': -5., 'max': 5., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^T2_1@BSZ2015' , 'min': -5., 'max': 5., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^T2_2@BSZ2015' , 'min': -5., 'max': 5., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^T23_0@BSZ2015', 'min': -5., 'max': 5., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^T23_1@BSZ2015', 'min': -5., 'max': 5., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^T23_2@BSZ2015', 'min': -5., 'max': 5., 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^A0_0@BSZ2015' , 'min': -10., 'max': 10., 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^A0_1@BSZ2015' , 'min': -10., 'max': 10., 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^A0_2@BSZ2015' , 'min': -10., 'max': 10., 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^A1_0@BSZ2015' , 'min': -10., 'max': 10., 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^A1_1@BSZ2015' , 'min': -10., 'max': 10., 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^A1_2@BSZ2015' , 'min': -10., 'max': 10., 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^A12_1@BSZ2015', 'min': -10., 'max': 10., 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^A12_2@BSZ2015', 'min': -10., 'max': 10., 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^V_0@BSZ2015'  , 'min': -10., 'max': 10., 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^V_1@BSZ2015'  , 'min': -10., 'max': 10., 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^V_2@BSZ2015'  , 'min': -10., 'max': 10., 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^T1_0@BSZ2015' , 'min': -10., 'max': 10., 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^T1_1@BSZ2015' , 'min': -10., 'max': 10., 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^T1_2@BSZ2015' , 'min': -10., 'max': 10., 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^T2_1@BSZ2015' , 'min': -10., 'max': 10., 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^T2_2@BSZ2015' , 'min': -10., 'max': 10., 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^T23_0@BSZ2015', 'min': -10., 'max': 10., 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^T23_1@BSZ2015', 'min': -10., 'max': 10., 'type': 'uniform' },
+            { 'parameter': 'B->K^*::alpha^T23_2@BSZ2015', 'min': -10., 'max': 10., 'type': 'uniform' },
         ],
         'likelihood': [
             # 'B->K^*::FormFactors[parametric,LCSRLattice]@GKvD:2018A'
@@ -163,7 +163,7 @@ def parameter_cov(ana):
     pars = []
     for n in range(0,5):
         rng = np.random.mtrand.RandomState(74205+n)
-        p, _ = ana.sample(N=10000, stride=5, pre_N=1000, preruns=5, rng=rng)
+        p, _ = ana.sample(N=5000, stride=5, pre_N=1000, preruns=5, rng=rng)
         pars += p.tolist()
     pars = np.array(pars)
     cov = np.cov(pars.T).tolist()
