@@ -9,7 +9,7 @@ import pymc as pm
 null = knunu_utils.null_pred()
 alt = knunu_utils.alt_pred()
 
-model, alt_yields = modifier.load('knunu_model.json', alt.distribution, null.distribution, return_data=True, clip_bin_data=3.)
+model, alt_yields = modifier.load('knunu_model.json', alt.distribution, null.distribution, return_data=True, clip_bin_data=0.1)
 
 # Perform the sampling
 unconstr_priors = {
@@ -24,9 +24,9 @@ unconstr_priors = {
 priorDict_conjugate = prepare_inference.build_priorDict(model, unconstr_priors)
 priorDict_conjugate
 
-n_draws = 100000
+n_draws = 10000
 with infer.model(model, unconstr_priors, alt_yields):
-    post_data = pm.sample(draws=n_draws, tune=10000)
+    post_data = pm.sample(draws=n_draws, tune=1000, cores=8)
     post_pred = pm.sample_posterior_predictive(post_data)
     prior_pred = pm.sample_prior_predictive(n_draws)
 
