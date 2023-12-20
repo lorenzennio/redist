@@ -156,14 +156,14 @@ class alt_pred:
 
         return obs
     
-def parameter_cov(ana):
+def parameter_cov(ana, chains=5, samples=5000):
     """
     Get covariance matrix of parameters in EOS analysis object.
     """
     pars = []
-    for n in range(0,5):
+    for n in range(0,chains):
         rng = np.random.mtrand.RandomState(74205+n)
-        p, _ = ana.sample(N=5000, stride=5, pre_N=1000, preruns=5, rng=rng)
+        p, _ = ana.sample(N=samples, stride=5, pre_N=1000, preruns=5, rng=rng)
         pars += p.tolist()
     pars = np.array(pars)
     cov = np.cov(pars.T).tolist()
