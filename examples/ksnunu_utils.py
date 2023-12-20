@@ -13,31 +13,16 @@ def analysis():
     """
     with open('ksnunu_constraint.yaml', 'r') as f:
         constr = yaml.load(f, Loader=SafeLoader)
+        
+    os = constr['B->K^*::FormFactors[parametric,BSZ]@GRvDV:2023A']['observables']
+    ms = constr['B->K^*::FormFactors[parametric,BSZ]@GRvDV:2023A']['means']
+    c = constr['B->K^*::FormFactors[parametric,BSZ]@GRvDV:2023A']['covariance']
+    us = np.sqrt(np.diag(c))
 
     analysis_args = {
         'global_options': { },
         'manual_constraints': constr,
-        'priors': [
-            { 'parameter': 'B->K^*::alpha^A0_0@BSZ2015' , 'min': -10., 'max': 10., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^A0_1@BSZ2015' , 'min': -10., 'max': 10., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^A0_2@BSZ2015' , 'min': -10., 'max': 10., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^A1_0@BSZ2015' , 'min': -10., 'max': 10., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^A1_1@BSZ2015' , 'min': -10., 'max': 10., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^A1_2@BSZ2015' , 'min': -10., 'max': 10., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^A12_1@BSZ2015', 'min': -10., 'max': 10., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^A12_2@BSZ2015', 'min': -10., 'max': 10., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^V_0@BSZ2015'  , 'min': -10., 'max': 10., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^V_1@BSZ2015'  , 'min': -10., 'max': 10., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^V_2@BSZ2015'  , 'min': -10., 'max': 10., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^T1_0@BSZ2015' , 'min': -10., 'max': 10., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^T1_1@BSZ2015' , 'min': -10., 'max': 10., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^T1_2@BSZ2015' , 'min': -10., 'max': 10., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^T2_1@BSZ2015' , 'min': -10., 'max': 10., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^T2_2@BSZ2015' , 'min': -10., 'max': 10., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^T23_0@BSZ2015', 'min': -10., 'max': 10., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^T23_1@BSZ2015', 'min': -10., 'max': 10., 'type': 'uniform' },
-            { 'parameter': 'B->K^*::alpha^T23_2@BSZ2015', 'min': -10., 'max': 10., 'type': 'uniform' },
-        ],
+        'priors': [{ 'parameter': o , 'min': m-2*u, 'max': m+2*u, 'type': 'uniform' } for o, m, u in zip(os, ms, us)],
         'likelihood': [
             # 'B->K^*::FormFactors[parametric,LCSRLattice]@GKvD:2018A'
         ]
