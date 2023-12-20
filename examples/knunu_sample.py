@@ -22,7 +22,11 @@ unconstr_priors = {
 }
 
 priorDict_conjugate = prepare_inference.build_priorDict(model, unconstr_priors)
-priorDict_conjugate
+
+# fix FF pars
+for i in range(3, 8):
+    ind = model.config.auxdata_order.index(f'FFK_decorrelated[{i}]')
+    model.constraint_model.constraints_gaussian.sigmas[ind] = 1e-10
 
 n_draws = 10000
 with infer.model(model, unconstr_priors, alt_yields):
