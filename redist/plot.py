@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib
 matplotlib.style.use('redist.style')
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 from redist import modifier
 
 def dists(cmod, alt_pars=(), lims=None, labels = [], plot_dists=True, plot_weights=False):
@@ -111,7 +112,6 @@ def _dists2d(cmod, alt_pars, lims, labels, plot_dists, plot_weights):
     
     return fig, ax
 
-from matplotlib.ticker import MaxNLocator
 def map(cmod, **imshow_kwargs):
     fig, ax = plt.subplots()
     
@@ -123,11 +123,13 @@ def map(cmod, **imshow_kwargs):
     # Plot vertical colorbar
     fig.colorbar(im, fraction=0.047*im_ratio)
     
-    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+    
+    ax.minorticks_off()
     
     ax.set_xlabel('Kinematic bins')
-    ax.set_ylabel('Fitting bins')
+    ax.set_ylabel('Target bins')
     
     fig.tight_layout()
     
