@@ -38,7 +38,7 @@ def efficiency(q2):
     Overall scale different, as this can be compensated be number of simulated events.
     """
     # return np.exp(-0.2*q2)
-    return 1 - 0.08*np.exp(0.1*q2)
+    return 0.3*(1 - 0.08*np.exp(0.1*q2))
 
 class null_pred:
     """
