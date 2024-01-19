@@ -50,7 +50,8 @@ def efficiency(q2):
     Efficiency map adapted from https://journals.aps.org/prl/supplemental/10.1103/PhysRevLett.127.181802/suppl_mat.pdf (Figure 3)
     Overall scale different, as this can be compensated be number of simulated events.
     """
-    return 0.4*np.exp(-0.2*q2)
+    mB = 5.279 # GeV
+    return 0.4*np.exp(-5*q2/mB**2)
 
 class null_pred:
     """
