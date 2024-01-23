@@ -22,7 +22,7 @@ def analysis():
     analysis_args = {
         'global_options': { },
         'manual_constraints': constr,
-        'priors': [{ 'parameter': o , 'min': m-2*u, 'max': m+2*u, 'type': 'uniform' } for o, m, u in zip(os, ms, us)],
+        'priors': [{ 'parameter': o , 'min': m-15*u, 'max': m+15*u, 'type': 'uniform' } for o, m, u in zip(os, ms, us)],
         'likelihood': [
             # 'B->K^*::FormFactors[parametric,LCSRLattice]@GKvD:2018A'
         ]
