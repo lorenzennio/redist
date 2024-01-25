@@ -11,7 +11,7 @@ files       = ['knunu_model.json', 'ksnunu_model.json']
 alt_dists   = [knunu_utils.alt_pred().distribution, ksnunu_utils.alt_pred().distribution]
 null_dists  = [knunu_utils.null_pred().distribution, ksnunu_utils.null_pred().distribution]
 
-model, data = modifier.combine(files, alt_dists, null_dists, return_data=True, clip_bin_data=0.1)
+model, data = modifier.combine(files, alt_dists, null_dists, return_data=True, clip_bin_data=1e-6)
 yields = data[:model.config.nmaindata]
 
 # Perform the sampling
@@ -22,27 +22,26 @@ unconstr_priors = {
     # 'csl': {'type': 'HalfNormal_Unconstrained',  'sigma': [3]},
     # 'csr': {'type': 'HalfNormal_Unconstrained',  'sigma': [3]},
     # 'ctl': {'type': 'HalfNormal_Unconstrained',  'sigma': [3]},
-    'cvl': {'type': 'Uniform_Unconstrained', 'lower': [6.], 'upper': [14.]},
-    'cvr': {'type': 'Uniform_Unconstrained', 'lower': [0.], 'upper': [8.]},
-    'csl': {'type': 'Uniform_Unconstrained', 'lower': [0.], 'upper': [8.]},
-    'csr': {'type': 'Uniform_Unconstrained', 'lower': [0.], 'upper': [8.]},
-    'ctl': {'type': 'Uniform_Unconstrained', 'lower': [0.], 'upper': [8.]},
+    'cvl': {'type': 'Uniform_Unconstrained', 'lower': [5.], 'upper': [15.]},
+    'cvr': {'type': 'Uniform_Unconstrained', 'lower': [0.], 'upper': [10.]},
+    'csl': {'type': 'Uniform_Unconstrained', 'lower': [0.], 'upper': [10.]},
+    'csr': {'type': 'Uniform_Unconstrained', 'lower': [0.], 'upper': [10.]},
+    'ctl': {'type': 'Uniform_Unconstrained', 'lower': [0.], 'upper': [10.]},
 }
 
 priorDict_conjugate = prepare_inference.build_priorDict(model, unconstr_priors)
 
-# fix FF pars
-# for i in range(3, 19):
-#     ind = model.config.auxdata_order.index(f'FFKs_decorrelated[{i}]')
-#     model.constraint_model.constraints_gaussian.sigmas[ind] = 1e-10
-
-# for i in range(3, 8):
-#     ind = model.config.auxdata_order.index(f'FFK_decorrelated[{i}]')
-#     model.constraint_model.constraints_gaussian.sigmas[ind] = 1e-10
-
-n_draws = 100000
+n_draws = 300000
 with infer.model(model, unconstr_priors, yields):
-    post_data = pm.sample(draws=n_draws, tune=10000, cores=4)
+    post_data = pm.sample(draws=n_draws, 
+                          tune=10000, 
+                          cores=8,
+                          initvals={'cvl': 10., 
+                                    'cvr': 4., 
+                                    'csl': 3.,
+                                    'csr': 1.,
+                                    'ctl': 1.}
+                          )
     post_pred = pm.sample_posterior_predictive(post_data)
     prior_pred = pm.sample_prior_predictive(n_draws)
 
