@@ -29,13 +29,7 @@ unconstr_priors = {
     'ctl': {'type': 'Uniform_Unconstrained', 'lower': [0.], 'upper': [10.]},
 }
 
-priorDict_conjugate = prepare_inference.build_priorDict(model, unconstr_priors)
-
-smodel = infer.model(model, unconstr_priors, yields)
-
-
-with smodel as sm:
-    breakpoint()
+with infer.model(model, unconstr_priors, yields):
     m = pm.find_MAP(start={'cvl': 10., 'cvr': 4., 'csl': 3., 'csr': 1., 'ctl': 1.}, maxeval=10000)
     # m = pm.find_MAP(maxeval=50000)
     
