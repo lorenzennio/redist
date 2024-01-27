@@ -58,6 +58,8 @@ unconstr_priors = {
 
 n_draws = 100000
 with fixed_infer_model(model, unconstr_priors, yields) as m:
+    
+    # implement constraints due to exchange symmetry
     cvl = m.named_vars["cvl"]
     cvr = m.named_vars["cvr"]
     csl = m.named_vars["csl"]
@@ -66,6 +68,7 @@ with fixed_infer_model(model, unconstr_priors, yields) as m:
     cs_constraint = csl > csr
     potential = pm.Potential("cv_constraint", pm.math.log(pm.math.switch(cv_constraint, 1, 0)))
     potential = pm.Potential("cs_constraint", pm.math.log(pm.math.switch(cs_constraint, 1, 0)))
+    
     post_data = pm.sample(draws=n_draws, 
                           tune=11000, 
                           cores=8,
