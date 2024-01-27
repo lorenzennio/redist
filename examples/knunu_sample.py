@@ -23,17 +23,18 @@ unconstr_priors = {
 
 priorDict_conjugate = prepare_inference.build_priorDict(model, unconstr_priors)
 
-# # fix FF pars
-# for i in range(3, 8):
-#     ind = model.config.auxdata_order.index(f'FFK_decorrelated[{i}]')
-#     model.constraint_model.constraints_gaussian.sigmas[ind] = 1e-10
-
-n_draws = 10000
+n_draws = 100000
 with infer.model(model, unconstr_priors, alt_yields):
-    post_data = pm.sample(draws=n_draws, tune=1000, cores=8)
+    post_data = pm.sample(draws=n_draws, 
+                          tune=10000, 
+                          cores=8,
+                        #   initvals={'cvl': 14., 
+                        #             'csl': 4.,
+                        #             'ctl': 1.}
+                          )
     post_pred = pm.sample_posterior_predictive(post_data)
     prior_pred = pm.sample_prior_predictive(n_draws)
 
-post_data.to_json( 'samples/knunu_post_data.json')
-post_pred.to_json( 'samples/knunu_post_pred.json')
-prior_pred.to_json('samples/knunu_prior_pred.json')
+post_data.to_json( 'samples/knunu_large_post_data.json')
+post_pred.to_json( 'samples/knunu_large_post_pred.json')
+prior_pred.to_json('samples/knunu_large_prior_pred.json')
