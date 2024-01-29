@@ -1,10 +1,15 @@
 import numpy as np
 from redist import modifier
-import knunu_utils 
-import ksnunu_utils 
+
+import sys, os
+path2add = os.path.abspath(os.path.join(os.getcwd(), os.path.pardir))
+if (not (path2add in sys.path)) :
+    sys.path.append(path2add)
+    
+from knunu import knunu_utils
+from ksnunu import ksnunu_utils
 
 import pymc as pm
-from bayesian_pyhf import infer
 from bayesian_pyhf import prepare_inference
 from bayesian_pyhf import make_op
 
@@ -34,7 +39,7 @@ def fixed_infer_model(stat_model, unconstrained_priors, data, ur_hyperparameters
         yield m
 
 
-files       = ['knunu_model.json', 'ksnunu_model.json']
+files       = ['../knunu/knunu_model.json', '../ksnunu/ksnunu_model.json']
 alt_dists   = [knunu_utils.alt_pred().distribution, ksnunu_utils.alt_pred().distribution]
 null_dists  = [knunu_utils.null_pred().distribution, ksnunu_utils.null_pred().distribution]
 
@@ -70,7 +75,7 @@ with fixed_infer_model(model, unconstr_priors, yields) as m:
     potential = pm.Potential("cs_constraint", pm.math.log(pm.math.switch(cs_constraint, 1, 0)))
     
     post_data = pm.sample(draws=n_draws, 
-                          tune=11000, 
+                          tune=10000, 
                           cores=8,
                           initvals={'cvl': 10., 
                                     'cvr': 4., 
@@ -82,6 +87,6 @@ with fixed_infer_model(model, unconstr_priors, yields) as m:
     prior_pred = pm.sample_prior_predictive(n_draws)
 
 print('Done! Saving results!')
-post_data.to_json( 'samples/comb_constr_post_data.json')
-post_pred.to_json( 'samples/comb_constr_post_pred.json')
-prior_pred.to_json('samples/comb_constr_prior_pred.json')
+post_data.to_json( '../samples/comb_constr_post_data.json')
+post_pred.to_json( '../samples/comb_constr_post_pred.json')
+prior_pred.to_json('../samples/comb_constr_prior_pred.json')

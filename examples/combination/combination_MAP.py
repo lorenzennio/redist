@@ -1,10 +1,15 @@
 import numpy as np
 from redist import modifier
-import knunu_utils 
-import ksnunu_utils 
+
+import sys, os
+path2add = os.path.abspath(os.path.join(os.getcwd(), os.path.pardir))
+if (not (path2add in sys.path)) :
+    sys.path.append(path2add)
+    
+from knunu import knunu_utils
+from ksnunu import ksnunu_utils
 
 import pymc as pm
-from bayesian_pyhf import infer
 from bayesian_pyhf import prepare_inference
 from bayesian_pyhf import make_op
 
@@ -34,7 +39,7 @@ def fixed_infer_model(stat_model, unconstrained_priors, data, ur_hyperparameters
         yield m
 
 
-files       = ['knunu_model.json', 'ksnunu_model.json']
+files       = ['../knunu/knunu_model.json', '../ksnunu/ksnunu_model.json']
 alt_dists   = [knunu_utils.alt_pred().distribution, ksnunu_utils.alt_pred().distribution]
 null_dists  = [knunu_utils.null_pred().distribution, ksnunu_utils.null_pred().distribution]
 

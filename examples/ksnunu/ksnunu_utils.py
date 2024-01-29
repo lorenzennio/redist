@@ -1,8 +1,11 @@
+import os
 import numpy as np
 import eos
 import numbers
 import yaml
 from yaml.loader import SafeLoader
+
+_script_dir = os.path.dirname(os.path.abspath(__file__))
 
 def analysis():
     """
@@ -11,7 +14,7 @@ def analysis():
     Returns:
         EOS analysis instance
     """
-    with open('ksnunu_constraint.yaml', 'r') as f:
+    with open(_script_dir + '/ksnunu_constraint.yaml', 'r') as f:
         constr = yaml.load(f, Loader=SafeLoader)
         
     os = constr['B->K^*::FormFactors[parametric,BSZ]@GRvDV:2023A']['observables']
