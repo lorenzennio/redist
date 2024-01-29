@@ -35,6 +35,6 @@ with infer.model(model, unconstr_priors, alt_yields):
     post_pred = pm.sample_posterior_predictive(post_data)
     prior_pred = pm.sample_prior_predictive(n_draws)
 
-post_data.to_json( 'samples/knunu_large_post_data.json')
-post_pred.to_json( 'samples/knunu_large_post_pred.json')
-prior_pred.to_json('samples/knunu_large_prior_pred.json')
+post_data.to_json( '../samples/knunu_large_post_data.json')
+post_pred.to_json( '../samples/knunu_large_post_pred.json')
+prior_pred.to_json('../samples/knunu_large_prior_pred.json')
