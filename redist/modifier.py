@@ -199,16 +199,16 @@ def add_to_model(model, channels, samples, modifier_set, modifier_specs):
 
     return model
 
-def save(file, spec, cmod, data=None):
+def save(file, spec, cmods, data=None):
     """
     Save the custom model, mapping distribution (and data).
     """
     d = {
         'spec': spec, 
-        'name': cmod.name,
-        'new_pars': cmod.new_pars,
-        'map':  cmod.map.tolist(),
-        'bins': cmod.bins if isinstance(cmod.bins,list) else cmod.bins.tolist()
+        'name': [cmod.name for cmod in cmods],
+        'new_pars': [cmod.new_pars for cmod in cmods],
+        'map':  [cmod.map.tolist() for cmod in cmods],
+        'bins': [cmod.bins if isinstance(cmod.bins,list) else cmod.bins.tolist() for cmod in cmods]
         }
     if data is not None:
         d['data'] = np.array(data).tolist()
@@ -223,14 +223,21 @@ def load(file, alt_dist, null_dist, return_modifier=False, return_data=False, **
     with open(file, 'r') as f:
         d = json.load(f)
         
-    new_pars = _read_pars(d['new_pars'])
-    
-    cmod = Modifier(new_pars, alt_dist, null_dist, d['map'], d['bins'], name=d['name'])
-    
-    model = pyhf.Model(d['spec'], validate=False, batch_size=None, modifier_set=cmod.expanded_pyhf, **kwargs)
+    new_pars = {}
+    for pars in d['new_pars']:
+        new_pars.update(_read_pars(pars))
+    cmods = []
+    for name, map, bins in zip(d['name'], d['map'], d['bins']):
+        cmods.append(Modifier(new_pars, alt_dist, null_dist, map, bins, name=name))
+
+    expanded_pyhf = {}
+    for cmod in cmods:
+        expanded_pyhf.update(cmod.expanded_pyhf)
         
-    if return_modifier and return_data: return model, cmod, d['data']
-    if return_modifier: return model, cmod
+    model = pyhf.Model(d['spec'], validate=False, batch_size=None, modifier_set=expanded_pyhf, **kwargs)
+        
+    if return_modifier and return_data: return model, cmods, d['data']
+    if return_modifier: return model, cmods
     if return_data: return model, d['data']
     return model
 
