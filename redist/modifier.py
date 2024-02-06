@@ -13,9 +13,10 @@ class Modifier():
     Modifier implementation to reweight historgram according to the ratio of 
     a null and an alternative distribution. 
     """
-    def __init__(self, new_pars, alt_dist, null_dist, map, bins, name = None):
-        # store name
+    def __init__(self, new_pars, alt_dist, null_dist, map, bins, name = None, cutoff=None):
+        # store name and cutoff
         self.name = name if name else 'custom'
+        self.cutoff = cutoff
         
         # store null and alternative distributions
         self.null_dist = null_dist
@@ -27,7 +28,7 @@ class Modifier():
         self.bins = bins
         
         # compute the bin-integrated null distribution (this is fixed)
-        self.null_binned = bintegrate(null_dist, bins)
+        self.null_binned = bintegrate(null_dist, bins, cutoff=self.cutoff)
         
         # take care of correlated paramters
         self.new_pars = new_pars
@@ -115,7 +116,7 @@ class Modifier():
         # compute original parameters from pyhf parameters
         rot_pars = self.rotate_pars(pars)
         
-        alt_binned = bintegrate(self.alt_dist, self.bins, tuple(rot_pars.values()))
+        alt_binned = bintegrate(self.alt_dist, self.bins, tuple(rot_pars.values()), cutoff=self.cutoff)
                 
         weights = alt_binned / self.null_binned
         
@@ -145,14 +146,19 @@ class Modifier():
         
         return func
     
-def bintegrate(func, bins, args=()):
+def bintegrate(func, bins, args=(), cutoff=None):
     """
     Integrate function in given bins.
     """
+    cutoff = cutoff if cutoff else tuple((-np.inf, np.inf) for _ in bins)
     ranges = [list(zip(b[:-1], b[1:])) for b in bins]
     results = []
     for limits in itertools.product(*ranges):
-        results.append(sp.integrate.nquad(func, limits, args=args)[0])
+        #enforce cutoff
+        if any(l[0] < c[0] or l[1] > c[1] for l, c in zip(limits, cutoff)):
+            results.append(np.nan)
+        else:
+            results.append(sp.integrate.nquad(func, limits, args=args)[0])
     return np.reshape(results, tuple(len(b)-1 for b in bins)).T
     
 def _pca(cov, return_rot=False):
