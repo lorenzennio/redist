@@ -129,7 +129,7 @@ def map(cmod, **imshow_kwargs):
     ax.minorticks_off()
     
     ax.set_xlabel('Kinematic bins')
-    ax.set_ylabel('Target bins')
+    ax.set_ylabel('Reconstruction\nbins')
     
     fig.tight_layout()
     
