@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib
+from matplotlib.ticker import NullFormatter
 matplotlib.style.use('redist.style')
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
@@ -134,3 +135,72 @@ def map(cmod, **imshow_kwargs):
     fig.tight_layout()
     
     return fig, ax
+
+def colorHistOnHeight(N, patches, cmap, norm):
+    fracs = norm(N)
+    for thisfrac, thispatch in zip(fracs, patches):
+        color = cmap(thisfrac)
+        thispatch.set_facecolor(color)
+    return
+
+def map_project(cmod, log=False, **imshow_kwargs):
+
+    nullfmt = NullFormatter()
+
+    # definitions for the axes
+    scale = cmod.map.shape[0]/cmod.map.shape[1]
+    left, width = 0.1, 0.65
+    bottom, height = 0.1, 0.65*scale
+    bottom_h = left + height + 0.02
+    left_h = left + width + 0.02
+
+    rect_hist2 = [left, bottom, width, height]
+    rect_histx = [left, bottom_h, width, 0.2]
+    rect_histy = [left_h, bottom, 0.2, height]
+    rect_cb    = [left_h, bottom_h, 0.03, 0.2]
+
+    # start with a rectangular Figure
+    fig = plt.figure(1, figsize=(8, 8))
+
+    axHist2 = plt.axes(rect_hist2)
+    axHistx = plt.axes(rect_histx)
+    axHisty = plt.axes(rect_histy)
+    axcb = plt.axes(rect_cb)
+    
+    vmin = min(np.min(cmod.map.sum(axis=0)), np.min(cmod.map.sum(axis=1)))
+    vmax = max(np.max(cmod.map.sum(axis=0)), np.max(cmod.map.sum(axis=1)))
+    
+    norm = matplotlib.colors.LogNorm(vmin = vmin, vmax = vmax)
+    
+    im = axHist2.imshow(cmod.map, norm=norm, **imshow_kwargs)
+    # place colorbar right of axhistx
+    cbar = fig.colorbar(im, cax=axcb, fraction=0.047*scale, use_gridspec=True)
+    # cbar.ax.set_yticklabels(['1', '2', '4', '6', '8'], size=24)
+
+    N = cmod.map.sum(axis=0)
+    x = np.arange(0, cmod.map.shape[1], 1)
+    p = axHistx.bar(x, N, width=1)
+    colorHistOnHeight(N, p, im.get_cmap(), norm)
+    
+    N = cmod.map.sum(axis=1)
+    x = np.arange(0, cmod.map.shape[0], 1)
+    p = axHisty.barh(x, N, height=1)
+    colorHistOnHeight(N, p, im.get_cmap(), norm)
+    
+    axHistx.set_xlim(axHist2.get_xlim())
+    axHisty.set_ylim(axHist2.get_ylim())
+    
+    axHistx.ticklabel_format(axis='both', style='scientific', scilimits=(0,0))
+    axHisty.ticklabel_format(axis='both', style='scientific', scilimits=(0,0))
+
+    axHistx.xaxis.set_major_formatter(nullfmt)
+    axHisty.yaxis.set_major_formatter(nullfmt)
+    
+    if log:
+        axHistx.set_yscale('log')
+        axHisty.set_xscale('log')
+    
+    axHist2.set_xlabel('Kinematic bins')
+    axHist2.set_ylabel('Reconstruction\nbins')
+    
+    return fig
