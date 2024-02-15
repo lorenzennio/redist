@@ -25,6 +25,7 @@ dependencies = [
     "dynesty==2.0.3",
     "jsonschema",
     "pyhf",
+    "bayesian_pyhf @ git+https://github.com/malin-horstmann/bayesian_pyhf.git",
     "requests",
     "numexpr",
     "iminuit",
@@ -52,6 +53,9 @@ Documentation = "https://github.com/lorenzennio/redist"
 
 [tool.hatch.version]
 source = "vcs"
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.hatch.version.raw-options]
 local_scheme = "no-local-version"
