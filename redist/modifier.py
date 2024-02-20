@@ -183,7 +183,7 @@ def par_dict(model, pars):
     """
     return {k: pars[v['slice']][0] if len(pars[v['slice']])==1 else pars[v['slice']].tolist() for k, v in model.config.par_map.items()}
 
-def add_to_model(model, channels, samples, modifier_set, modifier_specs):
+def add_to_model(model, channels, samples, modifier_set, modifier_specs, **model_kwargs):
     """
     Add a custom modifier to a pyhf model.
     """
@@ -195,7 +195,7 @@ def add_to_model(model, channels, samples, modifier_set, modifier_specs):
                 if samp['name'] in samples:
                   spec['channels'][c]['samples'][s]['modifiers'].append(modifier_specs)
 
-    model = pyhf.Model(spec, validate=False, batch_size=None, modifier_set=modifier_set)
+    model = pyhf.Model(spec, validate=False, batch_size=None, modifier_set=modifier_set, **model_kwargs)
 
     return model
 
