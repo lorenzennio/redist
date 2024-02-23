@@ -11,7 +11,7 @@
 ## Overview
 This is the implementation of a reweighing method for the reinterpretation of binned analyses in high energy physics. The method is based on calculating the change in the distributions of observables, given changes in the decay channel's kinematic distributions. 
 
-More details are provided [here]() (paper to be linked).
+**Check out the paper [here](https://arxiv.org/pdf/2402.08417.pdf).**
 
 ## Dependencies
 This implementation is based on the [pyhf](https://github.com/scikit-hep/pyhf) software for statistical inference. The [examples](examples) use the [EOS](https://github.com/eos/eos) software to calculate theoretical predictions.
