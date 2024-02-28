@@ -2,6 +2,7 @@ import re
 from copy import deepcopy
 import itertools
 from collections import defaultdict
+from collections.abc import Iterable
 import numpy as np
 import scipy as sp
 import json
@@ -253,7 +254,11 @@ def combine(files, alt_dists, null_dists, return_data=False, **kwargs):
     
     workspaces = []
     for m, c, d in zip(models, cmods, datas):
-        workspaces.append(pyhf.Workspace.build(m, d, c.name, validate=False))
+        if isinstance(c, Iterable):
+            name = " ".join([cmod.name for cmod in c])
+        else:
+            name = c.name
+        workspaces.append(pyhf.Workspace.build(m, d, name, validate=False))
     
     comb_ws = None
     for w in workspaces:
@@ -263,7 +268,7 @@ def combine(files, alt_dists, null_dists, return_data=False, **kwargs):
             comb_ws = w
     
     modifier_set = None
-    for c in cmods:
+    for c in list(_flatten(cmods)):
         if modifier_set:
             modifier_set = modifier_set | c.expanded_pyhf
         else:
@@ -291,3 +296,10 @@ def map(target_samples, kinematic_samples, target_bins, kinematic_bins):
     samples = [target_samples] + list(kinematic_samples)
     binning = [target_bins] + list(kinematic_bins)
     return np.histogramdd(samples, bins=binning)[0]
+
+def _flatten(xs):
+    for x in xs:
+        if isinstance(x, Iterable) and not isinstance(x, (str, bytes)):
+            yield from _flatten(x)
+        else:
+            yield x
