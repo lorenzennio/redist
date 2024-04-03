@@ -112,13 +112,13 @@ def _dists2d(cmod, alt_pars, lims, labels, plot_dists, plot_weights):
     
     return fig, ax
 
-def map(cmod, **imshow_kwargs):
+def map(cmod, labels=None, **imshow_kwargs):
     fig, ax = plt.subplots()
     
     im = ax.imshow(cmod.map, **imshow_kwargs)
     
     # Calculate (height_of_image / width_of_image)
-    im_ratio = cmod.map.shape[0]/cmod.map.shape[1]
+    im_ratio = fig.get_size_inches()[0]/fig.get_size_inches()[1]
     
     # Plot vertical colorbar
     fig.colorbar(im, fraction=0.047*im_ratio)
@@ -127,9 +127,12 @@ def map(cmod, **imshow_kwargs):
     ax.yaxis.set_major_locator(MaxNLocator(integer=True))
     
     ax.minorticks_off()
-    
-    ax.set_xlabel('Kinematic bins')
-    ax.set_ylabel('Reconstruction\nbins')
+    if labels:
+        ax.set_xlabel(labels[0])
+        ax.set_ylabel(labels[1])
+    else:
+        ax.set_xlabel('Kinematic bins')
+        ax.set_ylabel('Reconstruction\nbins')
     
     fig.tight_layout()
     
