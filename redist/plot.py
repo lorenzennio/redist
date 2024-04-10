@@ -19,8 +19,8 @@ def _dists1d(cmod, alt_pars, lims, labels, plot_dists, plot_weights):
         lims = [cmod.bins[0][0], cmod.bins[0][-1]]
     x = np.linspace(*lims, 100)
     
-    null = modifier.bintegrate(cmod.null_dist, cmod.bins, cutoff=cmod.cutoff)
-    alt = modifier.bintegrate(cmod.alt_dist, cmod.bins, tuple(alt_pars), cutoff=cmod.cutoff)
+    null = modifier.bintegrate(cmod.null_dist, cmod.bins, cutoff=cmod.cutoff) / cmod.dbins
+    alt = modifier.bintegrate(cmod.alt_dist, cmod.bins, tuple(alt_pars), cutoff=cmod.cutoff) / cmod.dbins
         
     if plot_dists and plot_weights:
         fig, ax = plt.subplots(1,2, figsize=(14,5))

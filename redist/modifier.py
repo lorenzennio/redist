@@ -27,9 +27,7 @@ class Modifier():
         shape = np.shape(map)
         self.map  = np.reshape(map, (shape[0], np.prod(shape[1:])))
         self.bins = bins
-        
-        # compute the bin-integrated null distribution (this is fixed)
-        self.null_binned = bintegrate(null_dist, bins, cutoff=self.cutoff)
+        self.dbins = np.reshape(np.diff(self.bins, axis=1), tuple(len(b)-1 for b in self.bins)).T
         
         # take care of correlated paramters
         self.new_pars = new_pars
@@ -117,9 +115,7 @@ class Modifier():
         # compute original parameters from pyhf parameters
         rot_pars = self.rotate_pars(pars)
         
-        alt_binned = bintegrate(self.alt_dist, self.bins, tuple(rot_pars.values()), cutoff=self.cutoff)
-                
-        weights = alt_binned / self.null_binned
+        weights = bintegrate(lambda x : self.alt_dist(x, *rot_pars.values()) / self.null_dist(x), self.bins, cutoff=self.cutoff) / self.dbins
         
         weights[weights<0] = 1.
         weights[np.isnan(weights)] = 1.
