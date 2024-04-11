@@ -14,10 +14,11 @@ class Modifier():
     Modifier implementation to reweight historgram according to the ratio of 
     a null and an alternative distribution. 
     """
-    def __init__(self, new_pars, alt_dist, null_dist, map, bins, name = None, cutoff=None):
+    def __init__(self, new_pars, alt_dist, null_dist, map, bins, name = None, cutoff=None, weight_bound=100.):
         # store name and cutoff
         self.name = name if name else 'custom'
         self.cutoff = cutoff
+        self.weight_bound = weight_bound
         
         # store null and alternative distributions
         self.null_dist = null_dist
@@ -117,8 +118,9 @@ class Modifier():
         
         weights = bintegrate(lambda x : self.alt_dist(x, *rot_pars.values()) / self.null_dist(x), self.bins, cutoff=self.cutoff) / self.dbins
         
-        weights[weights<0] = 1.
         weights[np.isnan(weights)] = 1.
+        weights[weights<0.] = 1.
+        weights[weights>self.weight_bound] = self.weight_bound
         
         #flatten the weights
         weights = weights.reshape(-1, order='F')
