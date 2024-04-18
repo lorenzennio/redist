@@ -25,6 +25,10 @@ git clone https://github.com/lorenzennio/redist.git
 # Install 
 pip install -e redist
 ```
+## Contact
+
+If you come across a bug, have an issue or a question, please file an [issue](https://github.com/lorenzennio/redist/issues/new). For further inquiries, you can talk to us via [Discord](https://discord.gg/bmaVUQcR4w).
+
 
 ## License
 
