@@ -208,11 +208,13 @@ def save(file, spec, cmods, data=None):
     Save the custom model, mapping distribution (and data).
     """
     d = {
-        'spec': spec, 
-        'name': [cmod.name for cmod in cmods],
-        'new_pars': [cmod.new_pars for cmod in cmods],
-        'map':  [cmod.map.tolist() for cmod in cmods],
-        'bins': [cmod.bins if isinstance(cmod.bins,list) else cmod.bins.tolist() for cmod in cmods]
+        'spec'          : spec, 
+        'name'          : [cmod.name for cmod in cmods],
+        'new_pars'      : [cmod.new_pars for cmod in cmods],
+        'map'           : [cmod.map.tolist() for cmod in cmods],
+        'bins'          : [cmod.bins if isinstance(cmod.bins,list) else cmod.bins.tolist() for cmod in cmods],
+        'cutoff'        : [cmod.cutoff for cmod in cmods], 
+        'weight_bound'  : [cmod.weight_bound for cmod in cmods]
         }
     if data is not None:
         d['data'] = np.array(data).tolist()
@@ -231,8 +233,9 @@ def load(file, alt_dist, null_dist, return_modifier=False, return_data=False, **
     for pars in d['new_pars']:
         new_pars.update(_read_pars(pars))
     cmods = []
-    for name, map, bins in zip(d['name'], d['map'], d['bins']):
-        cmods.append(Modifier(new_pars, alt_dist, null_dist, map, bins, name=name))
+    for name, map, bins, cutoff, weight_bound in zip(d['name'], d['map'], d['bins'], d['cutoff'], d['weight_bound']):
+        cmods.append(Modifier(new_pars, alt_dist, null_dist, map, bins, 
+                              name=name, cutoff=cutoff, weight_bound=weight_bound))
 
     expanded_pyhf = {}
     for cmod in cmods:
