@@ -76,21 +76,21 @@ class Modifier():
                 
     def _corr_infos(self, corr_pars):
         """
-        Compute and store pca rotation matrix for correlated parameters.
+        Compute and store svd rotation matrix for correlated parameters.
         """
         corr_infos = {}
         if corr_pars:
             for k,v in corr_pars.items():
                 corr_infos[k] = {
                     'mean': v['inits'],
-                    'uvec': _pca(v['cov'])
+                    'uvec': _svd(v['cov'])
                     }
 
         return corr_infos
         
     def rotate_pars(self, pars):
         """
-        Map from pca parameters to true parameters.
+        Map from svd parameters to true parameters.
         """
         rot_pars = {}
         for k,v in pars.items():
@@ -165,8 +165,8 @@ def bintegrate(func, bins, args=(), cutoff=None):
             results.append(sp.integrate.nquad(func, limits, args=args)[0])
     return np.reshape(results, tuple(len(b)-1 for b in bins)).T
     
-def _pca(cov, return_rot=False):
-    """Principal Component analysis, moving to a space where the covariance matrix is diagonal
+def _svd(cov, return_rot=False):
+    """Singular value decomposition, moving to a space where the covariance matrix is diagonal
     https://www.cs.cmu.edu/~elaw/papers/pca.pdf
 
     Args:
