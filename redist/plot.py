@@ -5,16 +5,15 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 from redist import modifier
 
-def dists(cmod, alt_pars=(), lims=None, labels = [], plot_dists=True, plot_weights=False):
+def dists(cmod, alt_pars=(), lims=None, labels = [], plot_dists=True, plot_weights=False, axis=None):
     if len(cmod.bins) == 1:
-        fig, ax = _dists1d(cmod, alt_pars, lims, labels, plot_dists, plot_weights)
+        return _dists1d(cmod, alt_pars, lims, labels, plot_dists, plot_weights, axis)
         
     elif len(cmod.bins) == 2:
-        fig, ax = _dists2d(cmod, alt_pars, lims, labels, plot_dists, plot_weights)
-    return fig, ax
+        return _dists2d(cmod, alt_pars, lims, labels, plot_dists, plot_weights, axis)
 
         
-def _dists1d(cmod, alt_pars, lims, labels, plot_dists, plot_weights):
+def _dists1d(cmod, alt_pars, lims, labels, plot_dists, plot_weights, axis):
     if not lims:
         lims = [cmod.bins[0][0], cmod.bins[0][-1]]
     x = np.linspace(*lims, 100)
@@ -23,10 +22,18 @@ def _dists1d(cmod, alt_pars, lims, labels, plot_dists, plot_weights):
     alt = modifier.bintegrate(cmod.alt_dist, cmod.bins, tuple(alt_pars), cutoff=cmod.cutoff) / np.diff(cmod.bins[0])
         
     if plot_dists and plot_weights:
-        fig, ax = plt.subplots(1,2, figsize=(14,5))
+        if axis:
+            ax = axis
+        else:
+            fig, ax = plt.subplots(1,2, figsize=(14,5))
+            
         axdist, axw = ax
-    else:   
-        fig, ax = plt.subplots(figsize=(7,5))
+    else:
+        if axis:
+            ax = axis
+        else:
+            fig, ax = plt.subplots(figsize=(7,5))
+            
         if plot_dists:
             axdist = ax
         elif plot_weights:
@@ -55,10 +62,11 @@ def _dists1d(cmod, alt_pars, lims, labels, plot_dists, plot_weights):
             axw.set_xlabel(labels[0])
             axw.set_ylabel('Weights')
             
-
+    if axis:
+        return ax
     return fig, ax
     
-def _dists2d(cmod, alt_pars, lims, labels, plot_dists, plot_weights):
+def _dists2d(cmod, alt_pars, lims, labels, plot_dists, plot_weights, ax):
     if not lims:
         lims = []
         lims.append([cmod.bins[0][0], cmod.bins[0][-1]])
