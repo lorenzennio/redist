@@ -15,6 +15,17 @@ class Modifier():
     a null and an alternative distribution. 
     """
     def __init__(self, new_pars, alt_dist, null_dist, map, bins, name = None, cutoff=None, weight_bound=None):
+        """
+        Args:
+            new_pars (dict): New parameters to parametrize the model.
+            alt_dist (callable): Alternative distribution to be tested. 
+            null_dist (callable): Null distribution of the nominal model.
+            map (array): Joint number density matrix, binned in the analysis bins times the kinematic bins.
+            bins (array): kinematic binning
+            name (string, optional): Name of the custom modifier. Defaults to None.
+            cutoff (tuple, optional): Kinematic cutoff values to limit the integration boundaries to a given range. Defaults to None.
+            weight_bound (float, optional): Upper bound on the weight. Defaults to None.
+        """        
         # store name and cutoff
         self.name = name if name else 'custom'
         self.cutoff = cutoff
@@ -55,6 +66,12 @@ class Modifier():
     def _separate_pars(self, new_pars):
         """
         Separate parameters into correlated and uncorrelated ones.
+        
+        Args:
+            new_pars (dict): New parameters to parametrize the model.
+            
+        Returns:
+            dict, dict: Correlated and uncorrelated parameters.
         """
         corr_pars = {}
         unco_pars = {}
@@ -77,6 +94,12 @@ class Modifier():
     def _corr_infos(self, corr_pars):
         """
         Compute and store svd rotation matrix for correlated parameters.
+        
+        Args:
+            corr_pars (dict): Subset of `new_pars` containing correlated parameters.
+            
+        Returns:
+            dict: Dictionary containing the mean and rotation matrix for each correlated parameter.
         """
         corr_infos = {}
         if corr_pars:
@@ -91,6 +114,12 @@ class Modifier():
     def rotate_pars(self, pars):
         """
         Map from svd parameters to true parameters.
+        
+        Args:
+            pars (dict): pyhf parameters.
+            
+        Returns:
+            dict: Rotated parameters.
         """
         rot_pars = {}
         for k,v in pars.items():
@@ -114,6 +143,12 @@ class Modifier():
     def get_weights(self, pars):
         """
         Compute the new weights and process them for sensibility.
+        
+        Args:
+            pars (dict): pyhf parameters.
+            
+        Returns:
+            array: Weights for the given parameters.
         """
         # compute original parameters from pyhf parameters
         rot_pars = self.rotate_pars(pars)
@@ -135,6 +170,12 @@ class Modifier():
     def weight_func(self, pars):
         """
         Build function that applies weights to histogram.
+        
+        Args:
+            pars (dict): pyhf parameters.
+            
+        Returns:
+            callable: Function that returns histogram modifications.
         """
         key = tuple(i for i in pars.items())
         if key in self.cache:
@@ -153,6 +194,15 @@ class Modifier():
 def bintegrate(func, bins, args=(), cutoff=None):
     """
     Integrate function in given bins.
+    
+    Args:
+        func (callable): Function to be integrated.
+        bins (array): Binning of the integration.
+        args (tuple, optional): Additional arguments for the function. Defaults to ().
+        cutoff (tuple, optional): Cutoff values for the integration. Defaults to None.
+
+    Returns:
+        _type_: _description_
     """
     cutoff = cutoff if cutoff else tuple((-np.inf, np.inf) for _ in bins)
     ranges = [list(zip(b[:-1], b[1:])) for b in bins]
@@ -184,12 +234,30 @@ def _svd(cov, return_rot=False):
 def par_dict(model, pars):
     """
     Build parmaeter dictionary for pyhf model.
+    
+    Args:
+        model (pyhf.Model): pyhf model.
+        pars (dict): Parameters.
+        
+    Returns:
+        dict: Dictionary of parameters by names.
     """
     return {k: pars[v['slice']][0] if len(pars[v['slice']])==1 else pars[v['slice']].tolist() for k, v in model.config.par_map.items()}
 
 def add_to_model(model, channels, samples, modifier_set, modifier_specs, **model_kwargs):
     """
     Add a custom modifier to a pyhf model.
+    
+    Args:
+        model (pyhf.Model): pyhf model.
+        channels (list): List of channel names to add the modifier to.
+        samples (list): List of sample names to add the modifier to.
+        modifier_set (pyhf.modifier.ModifierSet): Pyhf modifier set.
+        modifier_specs (dict): Modifier specifications.
+        model_kwargs (dict): Additional model arguments.
+        
+    Returns:
+        pyhf.Model: Model with the custom modifier added.
     """
     spec = model.spec
     
@@ -206,6 +274,12 @@ def add_to_model(model, channels, samples, modifier_set, modifier_specs, **model
 def save(file, spec, cmods, data=None):
     """
     Save the custom model, mapping distribution (and data).
+    
+    Args:
+        file (string): File name.
+        spec (dict): Model specification.
+        cmods (list): List of custom modifiers.
+        data (array, optional): Data to be saved. Defaults to None.
     """
     d = {
         'spec'          : spec, 
@@ -225,6 +299,17 @@ def save(file, spec, cmods, data=None):
 def load(file, alt_dist, null_dist, return_modifier=False, return_data=False, **kwargs):
     """
     Load and build model from file
+    
+    Args:
+        file (string): File name.
+        alt_dist (callable): Alternative distribution to be tested. 
+        null_dist (callable): Null distribution of the nominal model.
+        return_modifier (bool, optional): Return custom modifiers. Defaults to False.
+        return_data (bool, optional): Return data. Defaults to False.
+        kwargs: Additional arguments for the pyhf model.
+        
+    Returns:
+        pyhf.Model, list, array: Model, custom modifiers, data.
     """
     with open(file, 'r') as f:
         d = json.load(f)
@@ -249,6 +334,19 @@ def load(file, alt_dist, null_dist, return_modifier=False, return_data=False, **
     return model
 
 def combine(files, alt_dists, null_dists, return_data=False, **kwargs):
+    """
+    Combine multiple models into one.
+    
+    Args:
+        files (list): List of file names containing pyhf models to be combined.
+        alt_dists (list): List of alternative distributions.
+        null_dists (list): List of null distributions.
+        return_data (bool, optional): Return data. Defaults to False.
+        kwargs: Additional arguments for the pyhf model.
+        
+    Returns:
+        pyhf.Model, array: Model, data.
+    """
     models = []
     cmods  = []
     datas  = []
@@ -298,6 +396,12 @@ def _read_pars(json_input):
 def map(target_samples, kinematic_samples, target_bins, kinematic_bins):
     """
     Generate mapping distribution from samples.
+    
+    Args:
+        target_samples (array): Target (fitting variable) samples.
+        kinematic_samples (array): Kinematic samples.
+        target_bins (array): Target (fitting variable) binning.
+        kinematic_bins (array): Kinematic binning.
     """
     samples = [target_samples] + list(kinematic_samples)
     binning = [target_bins] + list(kinematic_bins)
