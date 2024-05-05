@@ -197,7 +197,7 @@ def add_to_model(model, channels, samples, modifier_set, modifier_specs, **model
         if chan['name'] in channels:
             for s, samp in enumerate(chan['samples']):
                 if samp['name'] in samples:
-                  spec['channels'][c]['samples'][s]['modifiers'].append(modifier_specs)
+                    spec['channels'][c]['samples'][s]['modifiers'].append(modifier_specs)
 
     model = pyhf.Model(spec, validate=False, batch_size=None, modifier_set=modifier_set, **model_kwargs)
 
