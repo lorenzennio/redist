@@ -7,22 +7,23 @@ from redist import modifier
 
 dir_path = os.path.dirname(__file__)
 
-def null_dist(x, a=1., h1=2., h2=0.):
-    return a*(1+x*h1-x**2*h2)
+def null_dist(x, a=10.):
+    return a
 
 def alt_dist(x, a=1., h1=1., h2=1.):
-    return a*(1-x*h1+x**2*h2)
+    return a*(1+x*h1+x**2*h2)
 
 class TestSimpleModel:
-    binning = np.array([2.,3.,4.])
-    map = np.array([[5.,0], [0,10.]])
+    binning = np.array([2,3,5,6])
+
+    mapping_dist = np.array([[2., 2., 1.], [2., 6., 2.]])
 
     new_params = {
-                    'a'   :{'inits': (1.,), 'bounds': ((0., 10.),), 'paramset_type': 'unconstrained'},
-                    'h'   :{'inits': (1.,1.), 'bounds': ((0., 5.),(1., 6.)), 'cov': [[1.,0.5],[0.5,1.]], 'paramset_type': 'constrained_by_normal'}
-                }
+                'a'   :{'inits': (1.,), 'bounds': ((0., 10.),), 'paramset_type': 'unconstrained'},
+                'h'   :{'inits': (1.,1.), 'bounds': (), 'cov': [[0.5,0.1],[0.1,0.5]], 'paramset_type': 'constrained_by_normal'}
+            }
 
-    cmod = modifier.Modifier(new_params, alt_dist, null_dist, map, [binning])
+    cmod = modifier.Modifier(new_params, alt_dist, null_dist, mapping_dist, [binning])
     
     file = dir_path + "/models/simple_model.json"
     
@@ -61,18 +62,18 @@ class TestSimpleModel:
         init[0] = 2.
         init[1] = -0.2
         init[2] = -0.2
-        assert list(self.model.expected_actualdata(init)) == [57.68992134928011, 84.44994553338127]
+        assert list(self.model.expected_actualdata(init)) == [70.87379321155956, 106.5473859310839]
         
         init[0] = 4.
         init[1] = -1.
         init[2] = 2.
-        assert list(self.model.expected_actualdata(init)) == [106.62143571502338, 226.58278866714602]
+        assert list(self.model.expected_actualdata(init)) == [130.75011810022602, 241.82138862829896]
         
         init[0] = 10.
         init[1] = -5.
         init[2] = 5.
-        assert list(self.model.expected_actualdata(init)) == [412.62905754890335, 1155.8265250059922]
+        assert list(self.model.expected_actualdata(init)) == [534.8812568724203, 1153.7637634754315]
 
     def test_best_fit(self):
         print(self.best_fit)
-        assert pytest.approx(self.best_fit, 1e-4) == [ 2.0232e+00, -1.3993e-03, -1.5587e-03,  1.0000e+00, 9.9912e-01,  1.0014e+00]
+        assert pytest.approx(self.best_fit, 1e-4) == [ 1.01373882e+00, -9.85076153e-04,  1.29777515e-03,  1.00000000e+00, 9.87905813e-01,  1.02699001e+00]
