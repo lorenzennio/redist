@@ -40,6 +40,8 @@ class Modifier():
         self.map  = np.reshape(map, (shape[0], np.prod(shape[1:])))
         self.bins = bins
         
+        self.nominal = np.sum(self.map, axis=1)
+        
         # compute the bin-integrated null distribution (this is fixed)
         self.null_binned = bintegrate(null_dist, bins, cutoff=self.cutoff)
         
@@ -182,7 +184,8 @@ class Modifier():
             return self.cache[key]
                                 
         weights = self.get_weights(pars)
-        results = self.map @ (weights - 1)
+        results = self.map @ weights
+        results = results / self.nominal
         
         def func():
             return results

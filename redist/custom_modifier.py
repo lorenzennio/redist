@@ -65,7 +65,7 @@ def add(funcname, par_names, newparams, input_set = None, namespace=None):
 
     class _applier:
         name = funcname
-        op_code = 'addition'
+        op_code = 'multiplication'
 
         def __init__(self, modifiers, pdfconfig, builder_data, batch_size=None):
             self.funcs = [make_func(f) for f in builder_data['funcs'].values()]
@@ -99,7 +99,7 @@ def add(funcname, par_names, newparams, input_set = None, namespace=None):
             self.custommod_mask_bool = tensorlib.astensor(
                 self.custommod_mask, dtype="bool"
             )
-            self.custommod_default = tensorlib.zeros(self.custommod_mask.shape)
+            self.custommod_default = tensorlib.ones(self.custommod_mask.shape)
 
         def apply(self, pars):
             """
@@ -111,7 +111,7 @@ def add(funcname, par_names, newparams, input_set = None, namespace=None):
             tensorlib, _ = get_backend()
             deps = self.param_viewer.get(pars)
             out = tensorlib.astensor([f(deps) for f in self.funcs])
-            results = np.zeros_like(self.custommod_mask)
+            results = np.ones_like(self.custommod_mask)
             np.place(results, self.custommod_mask, out)
             results = tensorlib.where(
                 self.custommod_mask_bool, results, self.custommod_default
