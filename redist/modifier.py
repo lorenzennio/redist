@@ -245,7 +245,12 @@ def par_dict(model, pars):
     Returns:
         dict: Dictionary of parameters by names.
     """
-    return {k: pars[v['slice']][0] if len(pars[v['slice']])==1 else pars[v['slice']].tolist() for k, v in model.config.par_map.items()}
+    try:
+        par_list = pars.tolist()
+    except:
+        par_list = pars
+        
+    return {k: par_list[v['slice']][0] if len(par_list[v['slice']])==1 else par_list[v['slice']] for k, v in model.config.par_map.items()}
 
 def add_to_model(model, channels, samples, modifier_set, modifier_specs, **model_kwargs):
     """
