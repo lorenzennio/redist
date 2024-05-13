@@ -87,6 +87,6 @@ with fixed_infer_model(model, unconstr_priors, yields) as m:
     prior_pred = pm.sample_prior_predictive(n_draws)
 
 print('Done! Saving results!')
-post_data.to_json( '../samples/comb_constr_post_data.json')
-post_pred.to_json( '../samples/comb_constr_post_pred.json')
-prior_pred.to_json('../samples/comb_constr_prior_pred.json')
+post_data.to_json( '../samples_multiply/comb_constr_post_data.json')
+post_pred.to_json( '../samples_multiply/comb_constr_post_pred.json')
+prior_pred.to_json('../samples_multiply/comb_constr_prior_pred.json')
