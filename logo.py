@@ -23,4 +23,4 @@ ax.axis('off')
 font = {'family':'serif', 'weight':'light', 'color':'darkred','size':120}
 ax.text(0.31, 0.40, 'redist', transform=plt.gca().transAxes, fontdict=font, verticalalignment='top')
 
-plt.savefig('logo.svg', transparent=True)
+plt.savefig('logo.pdf', transparent=True)
