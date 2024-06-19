@@ -14,7 +14,7 @@ class Modifier():
     Modifier implementation to reweight historgram according to the ratio of 
     a null and an alternative distribution. 
     """
-    def __init__(self, new_pars, alt_dist, null_dist, map, bins, name = None, cutoff=None, weight_bound=None):
+    def __init__(self, new_pars, alt_dist, null_dist, map, bins, name = None, cutoff=None, weight_bound=None, allow_negative_weights=False):
         """
         Args:
             new_pars (dict): New parameters to parametrize the model.
@@ -25,11 +25,13 @@ class Modifier():
             name (string, optional): Name of the custom modifier. Defaults to None.
             cutoff (tuple, optional): Kinematic cutoff values to limit the integration boundaries to a given range. Defaults to None.
             weight_bound (float, optional): Upper bound on the weight. Defaults to None.
+            allow_negative_weights (bool, optional): Allow negative weights. Defaults to False.
         """        
         # store name and cutoff
         self.name = name if name else 'custom'
         self.cutoff = cutoff
         self.weight_bound = weight_bound
+        self.allow_negative_weights = allow_negative_weights
         
         # store null and alternative distributions
         self.null_dist = null_dist
@@ -160,7 +162,8 @@ class Modifier():
         weights = alt_binned / self.null_binned
         
         weights[np.isnan(weights)] = 1.
-        weights[weights<0.] = 1.
+        if not self.allow_negative_weights:
+            weights[weights<0.] = 1.
         if self.weight_bound:
             weights[weights>self.weight_bound] = self.weight_bound
         
