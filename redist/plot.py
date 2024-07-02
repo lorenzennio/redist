@@ -1,9 +1,10 @@
 import numpy as np
-import matplotlib
-matplotlib.style.use('redist.style')
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 from redist import modifier
+
+def set_style():
+    plt.style.use('redist.style')
 
 def dists(cmod, alt_pars=(), lims=None, labels = [], plot_dists=True, plot_weights=False, axis=None):
     if len(cmod.bins) == 1:
