@@ -125,17 +125,18 @@ def map(cmod,
                 'Kinematic bins',
                 'Reconstruction\nbins',
                 'Events (weighted)'
-                ], 
+                ],
+        axis = None,
         **imshow_kwargs):
-    fig, ax = plt.subplots()
+    if axis:
+        ax = axis
+    else:
+        fig, ax = plt.subplots()
     
     im = ax.imshow(cmod.map, **imshow_kwargs)
     
-    # Calculate (height_of_image / width_of_image)
-    im_ratio = fig.get_size_inches()[0]/fig.get_size_inches()[1]
-    
-    # Plot vertical colorbar
-    cbar = fig.colorbar(im, fraction=0.047*im_ratio, label=labels[2])
+    # Calculate (width_of_image / height_of_image)
+    im_ratio = ax.bbox.width / ax.bbox.height
     
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     ax.yaxis.set_major_locator(MaxNLocator(integer=True))
@@ -148,7 +149,10 @@ def map(cmod,
     #     ax.set_xlabel('Kinematic bins')
     #     ax.set_ylabel('Reconstruction\nbins')
     #     cbar.set_ylabel('Reconstruction\nbins')
+    if not axis:
+        cbar = fig.colorbar(im, fraction=0.047*im_ratio, label=labels[2])
+        fig.tight_layout()
     
-    fig.tight_layout()
-    
+    if axis:
+        return ax
     return fig, ax
