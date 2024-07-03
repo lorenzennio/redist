@@ -54,8 +54,7 @@ def _dists1d(cmod, alt_pars, lims, labels, plot_dists, plot_weights, axis):
         
     
     if plot_weights:
-        axw.plot(x, np.divide(cmod.alt_dist(x, *alt_pars),cmod.null_dist(x)), 'C3', label='weights')
-        axw.stairs(alt/null, cmod.bins[0],   color='C3', linewidth=1.5)
+        axw.stairs(alt/null, cmod.bins[0],   color='C3', linewidth=1.5, label='weights')
         axw.set_ylim(0, 1.5*max(alt/null))
         axw.legend()
         
