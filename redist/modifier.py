@@ -155,6 +155,7 @@ class Modifier():
             array: Weights for the given parameters.
         """
         # compute original parameters from pyhf parameters
+        
         rot_pars = self.rotate_pars(pars)
         
         alt_binned = bintegrate(self.alt_dist, self.bins, tuple(rot_pars.values()), cutoff=self.cutoff)
@@ -231,10 +232,16 @@ def _svd(cov, return_rot=False):
     Returns:
         array: matrix of column wise error vectors (eigenvectors * sqrt(eigenvalues); sqrt(eigenvalues) = std)
     """
-    svd = np.linalg.svd(cov)
-    uvec = svd[0] @ np.sqrt(np.diag(svd[1]))
+    if len(cov) == 1:
+        rot = np.array([[1.]])
+        uvec =  np.sqrt(cov)
+    else:
+        svd = np.linalg.svd(cov)
+        rot = svd[0]
+        uvec = svd[0] @ np.sqrt(np.diag(svd[1]))
+        
     if return_rot:
-        return uvec, svd[0]
+        return uvec, rot
     return uvec
 
 def par_dict(model, pars):
