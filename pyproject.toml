@@ -21,7 +21,7 @@ requires-python = ">=3.8"
 
 dependencies = [
     "pip>=23.0",
-    "eoshep==1.0.11",
+    "eoshep>=1.0.11",
     "dynesty==2.0.3",
     "jsonschema",
     "pyhf",
