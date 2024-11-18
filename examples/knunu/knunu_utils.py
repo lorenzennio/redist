@@ -4,8 +4,8 @@ import numbers
 
 def analysis():
     """
-    Specify the likelihoods and FF parameter ranges 
-    
+    Specify the likelihoods and FF parameter ranges
+
     Returns:
         EOS analysis instance
     """
@@ -14,13 +14,13 @@ def analysis():
     # there is no f0_0 because of a constriant which removes one parameter
 
     parameters = [
-        0.33772497529184886, -0.87793473613271, -0.07935870922121949, 
-        0.3719622997220613, 0.07388594710238389, 0.327935912834808, 
+        0.33772497529184886, -0.87793473613271, -0.07935870922121949,
+        0.3719622997220613, 0.07388594710238389, 0.327935912834808,
         -0.9490004115927961, -0.23146429907794228
         ]
     paramerror = [
-        0.010131234226468245, 0.09815140228051167, 0.26279803480131697, 
-        0.07751034526769873, 0.14588095119443809, 0.019809720318176644, 
+        0.010131234226468245, 0.09815140228051167, 0.26279803480131697,
+        0.07751034526769873, 0.14588095119443809, 0.019809720318176644,
         0.16833757660616938, 0.36912754148836896
         ]
     sigma = 15
@@ -61,7 +61,7 @@ class null_pred:
         p = analysis().parameters
         k = eos.Kinematics({'q2': 0.})
         o = eos.Options(**{'form-factors': 'BSZ2015', 'model': 'WET'})
-        
+
         self.kv1 = k['q2']
 
         self.obs = eos.Observable.make('B->Knunu::dBR/dq2', p, k, o)
@@ -77,7 +77,7 @@ class null_pred:
                 obs.append(self.obs.evaluate())
 
         return obs
-    
+
 class alt_pred:
     """
     Alternative (BSM) prediction
@@ -87,7 +87,7 @@ class alt_pred:
         p = self.ana.parameters
         k = eos.Kinematics({'q2': 0.})
         o = eos.Options(**{'form-factors': 'BSZ2015', 'model': 'WET'})
-        
+
         self.kv1 = k['q2'                      ]
         self.wc1 = p['sbnunu::Re{cVL}'            ]
         self.wc2 = p['sbnunu::Re{cVR}'            ]
@@ -102,7 +102,7 @@ class alt_pred:
         self.hv6 = p['B->K::alpha^fT_0@BSZ2015']
         self.hv7 = p['B->K::alpha^fT_1@BSZ2015']
         self.hv8 = p['B->K::alpha^fT_2@BSZ2015']
-        
+
         self.obs = eos.Observable.make('B->Knunu::dBR/dq2', p, k, o)
 
     def distribution(self, q2, cvl, cvr, csl, csr, ctl, fp0, fp1, fp2, f01, f02, fT0, fT1, fT2):
@@ -130,7 +130,7 @@ class alt_pred:
                 obs.append(self.obs.evaluate())
 
         return obs
-    
+
 def parameter_cov(ana, chains=5, samples=5000):
     """
     Get covariance matrix of parameters in EOS analysis object.

@@ -12,15 +12,15 @@ def alt_dist(x, y, a=2., b=0.5):
 class TestSimpleModel:
     xbinning = np.linspace( 0., 10., 5)
     ybinning = np.linspace( 4.,  8., 4)
-    
+
     binning = [xbinning, ybinning]
-    
+
     ones = np.ones((4,len(xbinning)-1,len(ybinning)-1))
     mapping_dist = np.array([m*(4-i) for i,m in enumerate(ones)])
     mapping_dist[0,:,1] = 2
     mapping_dist[1,:,2] = 4
     mapping_dist[2,:,0] = 1
-    
+
      # Set up the custom modifier
     new_params = {
                     'a'   :{'inits': (1.,), 'bounds': ((0., 5.),), 'paramset_type': 'unconstrained'},
@@ -73,13 +73,13 @@ class TestSimpleModel:
                 }
 
     model = modifier.add_to_model(model, ['singlechannel'], ['signal'], cmod.expanded_pyhf, custom_mod)
-    
-    
+
+
     init = model.config.suggested_init()
     init[0] = 4.0
     init[1] = 1.0
     data = list(model.expected_actualdata(init)) + model.config.auxdata
-    
+
     fixed = model.config.suggested_fixed()
     fixed[2] = True
 
@@ -87,23 +87,23 @@ class TestSimpleModel:
 
     def test_set_up_modifier(self):
         assert 'custom' in self.cmod.expanded_pyhf
-        
+
     def test_add_custom_modifier(self):
         assert 'a' in self.model.config.par_map
         assert 'b' in self.model.config.par_map
-        
+
     def test_yields(self):
         init = self.model.config.suggested_init()
-        
+
         init[0] = 4.
         init[1] = 1.
         print(list(self.model.expected_actualdata(init)))
         assert list(self.model.expected_actualdata(init)) == [87.31293547591133, 106.2242274556989, 122.56775971774324, 206.14632294135367]
-        
+
         init[0] = 3.
         init[1] = 2.
         assert list(self.model.expected_actualdata(init)) == [95.77097849197044, 115.40807581856629, 127.52258657258108, 208.71544098045123]
-        
+
         init[0] = 1.5
         init[1] = 2.5
         assert list(self.model.expected_actualdata(init)) == [84.22902150802956, 104.59192418143371, 122.47741342741892, 205.28455901954877]

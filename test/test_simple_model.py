@@ -1,4 +1,4 @@
-import os 
+import os
 import pytest
 import numpy as np
 import pyhf
@@ -24,14 +24,14 @@ class TestSimpleModel:
             }
 
     cmod = modifier.Modifier(new_params, alt_dist, null_dist, mapping_dist, [binning])
-    
+
     file = dir_path + "/models/simple_model.json"
-    
+
     with open(file, 'r') as f:
         spec = json.load(f)
 
     model = pyhf.Model(spec)
-    
+
     custom_mod = {
                 "name": "theory",
                 "type": "custom",
@@ -43,7 +43,7 @@ class TestSimpleModel:
 
     model = modifier.add_to_model(model, ['singlechannel'], ['signal'], cmod.expanded_pyhf, custom_mod)
     data = [58., 85.] + model.config.auxdata
-    
+
     fixed = model.config.suggested_fixed()
     fixed[3] = True
 
@@ -51,24 +51,24 @@ class TestSimpleModel:
 
     def test_set_up_modifier(self):
         assert 'custom' in self.cmod.expanded_pyhf
-        
+
     def test_add_custom_modifier(self):
         assert 'h_decorrelated[0]' in self.model.config.par_map
         assert 'h_decorrelated[1]' in self.model.config.par_map
-        
+
     def test_yields(self):
         init = self.model.config.suggested_init()
-        
+
         init[0] = 2.
         init[1] = -0.2
         init[2] = -0.2
         assert list(self.model.expected_actualdata(init)) == [70.87379321155956, 106.5473859310839]
-        
+
         init[0] = 4.
         init[1] = -1.
         init[2] = 2.
         assert list(self.model.expected_actualdata(init)) == [130.75011810022602, 241.82138862829896]
-        
+
         init[0] = 10.
         init[1] = -5.
         init[2] = 5.

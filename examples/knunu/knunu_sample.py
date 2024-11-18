@@ -25,10 +25,10 @@ priorDict_conjugate = prepare_inference.build_priorDict(model, unconstr_priors)
 
 n_draws = 100000
 with infer.model(model, unconstr_priors, alt_yields):
-    post_data = pm.sample(draws=n_draws, 
-                          tune=10000, 
+    post_data = pm.sample(draws=n_draws,
+                          tune=10000,
                           cores=8,
-                          initvals={'cvl': 14., 
+                          initvals={'cvl': 14.,
                                     'csl': 4.,
                                     'ctl': 1.}
                           )

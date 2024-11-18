@@ -5,7 +5,7 @@ import sys, os
 path2add = os.path.abspath(os.path.join(os.getcwd(), os.path.pardir))
 if (not (path2add in sys.path)) :
     sys.path.append(path2add)
-    
+
 from knunu import knunu_utils
 from ksnunu import ksnunu_utils
 
@@ -63,7 +63,7 @@ unconstr_priors = {
 
 n_draws = 100000
 with fixed_infer_model(model, unconstr_priors, yields) as m:
-    
+
     # implement constraints due to exchange symmetry
     cvl = m.named_vars["cvl"]
     cvr = m.named_vars["cvr"]
@@ -73,12 +73,12 @@ with fixed_infer_model(model, unconstr_priors, yields) as m:
     cs_constraint = csl > csr
     potential = pm.Potential("cv_constraint", pm.math.log(pm.math.switch(cv_constraint, 1, 0)))
     potential = pm.Potential("cs_constraint", pm.math.log(pm.math.switch(cs_constraint, 1, 0)))
-    
-    post_data = pm.sample(draws=n_draws, 
-                          tune=10000, 
+
+    post_data = pm.sample(draws=n_draws,
+                          tune=10000,
                           cores=8,
-                          initvals={'cvl': 10., 
-                                    'cvr': 4., 
+                          initvals={'cvl': 10.,
+                                    'cvr': 4.,
                                     'csl': 3.,
                                     'csr': 1.,
                                     'ctl': 1.}

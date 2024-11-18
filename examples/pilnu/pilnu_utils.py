@@ -4,14 +4,14 @@ import numbers
 
 def analysis():
     """
-    Specify the likelihoods and FF parameter ranges 
-    
+    Specify the likelihoods and FF parameter ranges
+
     Returns:
         EOS analysis instance
     """
 
     analysis_args = {
-        'priors': [      
+        'priors': [
             { 'parameter': 'B->pi::alpha^f+_0@BSZ2015', 'min': -5.0, 'max': +5.0, 'type': 'uniform' },
             { 'parameter': 'B->pi::alpha^f+_1@BSZ2015', 'min': -5.0, 'max': +5.0, 'type': 'uniform' },
             { 'parameter': 'B->pi::alpha^f+_2@BSZ2015', 'min': -5.0, 'max': +5.0, 'type': 'uniform' },
@@ -49,7 +49,7 @@ class null_pred:
 
         self.kv1 = k['q2']
         self.kv2 = k['cos(theta_l)']
-        
+
         self.obs = eos.Observable.make('B->pilnu::d^2BR/dq2/dcos(theta_l)', p, k, o)
 
 
@@ -71,7 +71,7 @@ class null_pred:
             obs = np.array(obs).T
 
         return obs
-    
+
 class alt_pred:
     """
     Alternative (BSM) prediction
@@ -81,7 +81,7 @@ class alt_pred:
         p = self.ana.parameters
         o = eos.Options({'form-factors': 'BSZ2015', 'l': 'tau', 'model':'WET'})
         k = eos.Kinematics({'q2': 5.0, 'cos(theta_l)': 0.0,})
-        
+
         self.kv1 = k['q2']
         self.kv2 = k['cos(theta_l)']
         self.wc1 = p['ubtaunutau::Re{cVL}']
@@ -97,7 +97,7 @@ class alt_pred:
         self.hv6 = p['B->pi::alpha^fT_0@BSZ2015']
         self.hv7 = p['B->pi::alpha^fT_1@BSZ2015']
         self.hv8 = p['B->pi::alpha^fT_2@BSZ2015']
-        
+
         self.obs = eos.Observable.make('B->pilnu::d^2BR/dq2/dcos(theta_l)', p, k, o)
 
 

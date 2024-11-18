@@ -25,6 +25,6 @@ priorDict_conjugate = prepare_inference.build_priorDict(model, unconstr_priors)
 
 with infer.model(model, unconstr_priors, alt_yields):
     m = pm.find_MAP(start={'cvl': 14., 'csl': 4., 'ctl': 1.}, maxeval=10000)
-    
+
 for k,v in m.items():
     print(k,v)

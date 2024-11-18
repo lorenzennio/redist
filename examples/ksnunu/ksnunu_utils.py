@@ -9,14 +9,14 @@ _script_dir = os.path.dirname(os.path.abspath(__file__))
 
 def analysis():
     """
-    Specify the likelihoods and FF parameter ranges 
-    
+    Specify the likelihoods and FF parameter ranges
+
     Returns:
         EOS analysis instance
     """
     with open(_script_dir + '/ksnunu_constraint.yaml', 'r') as f:
         constr = yaml.load(f, Loader=SafeLoader)
-        
+
     os = constr['B->K^*::FormFactors[parametric,BSZ]@GRvDV:2023A']['observables']
     ms = constr['B->K^*::FormFactors[parametric,BSZ]@GRvDV:2023A']['means']
     c = constr['B->K^*::FormFactors[parametric,BSZ]@GRvDV:2023A']['covariance']
@@ -51,7 +51,7 @@ class null_pred:
         p = analysis().parameters
         k = eos.Kinematics({'q2': 0.})
         o = eos.Options(**{'form-factors': 'BSZ2015', 'model': 'WET'})
-        
+
         self.kv1 = k['q2']
 
         self.obs = eos.Observable.make('B->K^*nunu::dBR/dq2', p, k, o)
@@ -67,7 +67,7 @@ class null_pred:
                 obs.append(self.obs.evaluate())
 
         return obs
-    
+
 class alt_pred:
     """
     Alternative (BSM) prediction
@@ -77,7 +77,7 @@ class alt_pred:
         p = self.ana.parameters
         k = eos.Kinematics({'q2': 0.})
         o = eos.Options(**{'form-factors': 'BSZ2015', 'model': 'WET'})
-        
+
         self.kv1  = k['q2'                         ]
         self.wc1  = p['sbnunu::Re{cVL}'            ]
         self.wc2  = p['sbnunu::Re{cVR}'            ]
@@ -103,7 +103,7 @@ class alt_pred:
         self.hv17 = p['B->K^*::alpha^T23_0@BSZ2015']
         self.hv18 = p['B->K^*::alpha^T23_1@BSZ2015']
         self.hv19 = p['B->K^*::alpha^T23_2@BSZ2015']
-        
+
         self.obs = eos.Observable.make('B->K^*nunu::dBR/dq2', p, k, o)
 
     def distribution(self, q2, cvl, cvr, csl, csr, ctl, v0, v1, v2, a00, a01, a02, a10, a11, a12, a121, a122, t10, t11, t12, t21, t22, t230, t231, t232):
@@ -143,7 +143,7 @@ class alt_pred:
                 obs.append(self.obs.evaluate())
 
         return obs
-    
+
 def parameter_cov(ana, chains=5, samples=5000):
     """
     Get covariance matrix of parameters in EOS analysis object.

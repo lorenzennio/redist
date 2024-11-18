@@ -1,5 +1,5 @@
 # Matplotlib style file
-# Adapted from 
+# Adapted from
 # https://stash.desy.de/projects/BT/repos/b2plot/browse/stylelib/belle2.mplstyle
 
 # General Settings
@@ -10,9 +10,9 @@ text.color          : .1
 # Fonts
 
 font.size           : 20
-xtick.labelsize     : 15 
-ytick.labelsize     : 15 
-axes.labelsize      : 22 
+xtick.labelsize     : 15
+ytick.labelsize     : 15
+axes.labelsize      : 22
 legend.fontsize     : 15
 
 axes.labelcolor     : .1

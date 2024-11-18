@@ -8,7 +8,7 @@ from typing import Any, Callable, Sequence
 
 def add(funcname, par_names, newparams, input_set = None, namespace=None):
     namespace = namespace or {}
-    
+
     def make_func(expression: str, namespace = namespace) -> Callable[[Sequence[float]], Any]:
         def func(deps: Sequence[float]) -> Any:
             if expression in namespace:
@@ -30,7 +30,7 @@ def add(funcname, par_names, newparams, input_set = None, namespace=None):
             'auxdata': p['auxdata'] if 'auxdata' in p.keys() else (0.0,),
         }
         return param_dict
-    
+
     class _builder:
         is_shared = True
 
@@ -69,7 +69,7 @@ def add(funcname, par_names, newparams, input_set = None, namespace=None):
 
         def __init__(self, modifiers, pdfconfig, builder_data, batch_size=None):
             self.funcs = [make_func(f) for f in builder_data['funcs'].values()]
-            
+
             self.batch_size = batch_size
             pars_for_applier = par_names
             _modnames = [f'{mtype}/{m}' for m, mtype in modifiers]
@@ -117,7 +117,7 @@ def add(funcname, par_names, newparams, input_set = None, namespace=None):
                 self.custommod_mask_bool, results, self.custommod_default
             )
             return results
-    
+
     modifier_set = {_applier.name: (_builder, _applier)}
     modifier_set.update(**(input_set if input_set is not None else pyhf.modifiers.histfactory_set))
     return modifier_set
