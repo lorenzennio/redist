@@ -32,7 +32,8 @@ dependencies = [
     "pytest",
     "jinja2",
     "ipykernel",
-    "corner"
+    "corner",
+    "pre-commit",
 ]
 
 classifiers = [
