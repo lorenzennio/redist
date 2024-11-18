@@ -37,7 +37,7 @@ class Modifier():
         self.null_dist = null_dist
         self.alt_dist  = alt_dist
         
-        # stor mapping distribution and binning
+        # store mapping distribution and binning
         shape = np.shape(map)
         self.map  = np.reshape(map, (shape[0], np.prod(shape[1:])))
         self.bins = bins
@@ -155,7 +155,6 @@ class Modifier():
             array: Weights for the given parameters.
         """
         # compute original parameters from pyhf parameters
-        
         rot_pars = self.rotate_pars(pars)
         
         alt_binned = bintegrate(self.alt_dist, self.bins, tuple(rot_pars.values()), cutoff=self.cutoff)
@@ -246,7 +245,7 @@ def _svd(cov, return_rot=False):
 
 def par_dict(model, pars):
     """
-    Build parmaeter dictionary for pyhf model.
+    Build parameter dictionary for pyhf model.
     
     Args:
         model (pyhf.Model): pyhf model.
