@@ -6,6 +6,7 @@ import numpy as np
 import json
 import pyhf
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 
 from redist.modifier import Modifier
 
@@ -650,7 +651,7 @@ class fitter:
 
         return v_out
 
-    def plot(self,**kwargs):
+    def plot(self, **kwargs):
         strides = self._template_list[0]._strides
         n_histos = len(strides)
         axis_titles = self._template_list[0]._histo_infos._axis_titles
@@ -661,51 +662,72 @@ class fitter:
             contributions.append(self.get_histos(self._template_list[k].generate_template(**kwargs)))
         n_histos = len(contributions[0])
         n_contributions = len(contributions)
-        
-        fig, axs = plt.subplots(n_histos, 1, figsize=(6, 4 * n_histos))
-        
-        if n_histos == 1:
-            axs = [axs]
-        
-        colors = plt.cm.viridis(np.linspace(0, 1, n_contributions)) 
 
-        for i in range(n_histos): 
+        colors = plt.cm.viridis(np.linspace(0, 1, n_contributions))
+
+        fig = plt.figure(figsize=(8, 6 * n_histos))
+        gs = gridspec.GridSpec(n_histos * 2, 1, height_ratios=[4, 1] * n_histos) 
+
+        axs = []
+        for i in range(n_histos):
+            ax_main = fig.add_subplot(gs[i * 2])
+            ax_ratio = fig.add_subplot(gs[i * 2 + 1], sharex=ax_main)
+            axs.append((ax_main, ax_ratio))
+
+        for i in range(n_histos):
             total_contribution = np.zeros(len(contributions[0][i]))
-            total_contribution_SM = np.zeros(len(contributions[0][i]))
-            for j in range(n_contributions): 
-                bin_content = contributions[j][i] 
+            for j in range(n_contributions):
+                bin_content = contributions[j][i]
                 n_bins = len(bin_content)
                 bin_edges = np.linspace(binning[i][0], binning[i][1], n_bins + 1)
 
+                # Main plot
                 if j == 0:
-                    axs[i].errorbar(
-                        bin_edges[:-1] + np.diff(bin_edges) / 2,  
-                        bin_content,                              
-                        yerr=np.sqrt(bin_content),                
-                        fmt='o',                                 
-                        alpha=1.,                                
+                    axs[i][0].errorbar(
+                        bin_edges[:-1] + np.diff(bin_edges) / 2,
+                        bin_content,                           
+                        yerr=np.sqrt(bin_content),              
+                        fmt='+',                                 
+                        alpha=1.,                                 
                         label='Data'                             
                     )
                 else:
-                    axs[i].bar(
-                        bin_edges[:-1], bin_content, width=np.diff(bin_edges), 
+                    axs[i][0].bar(
+                        bin_edges[:-1], bin_content, width=np.diff(bin_edges),
                         align='edge', alpha=0.5, color=colors[j], label=self._template_list[j-1]._name
                     )
-                    total_contribution += bin_content  
-            axs[i].step(
-                bin_edges, np.append(total_contribution, total_contribution[-1]),  
+                    total_contribution += bin_content
+
+            axs[i][0].step(
+                bin_edges, np.append(total_contribution, total_contribution[-1]),
                 where='post', color='black', linestyle='--', linewidth=1.5, label='Total'
             )
-           
-            axs[i].set_xlim(binning[i][0], binning[i][1])
-            axs[i].set_title('')
-            axs[i].set_xlabel(axis_titles[i])
-            axs[i].set_ylabel('Bin Content')
-            axs[i].legend(loc='best')  
 
+            ratio = contributions[0][i] / total_contribution
+            ratio_err = np.sqrt(contributions[0][i]) / total_contribution
+            axs[i][1].errorbar(
+                bin_edges[:-1] + np.diff(bin_edges) / 2, ratio, yerr=ratio_err,
+                fmt='+', alpha=1., label='Data'
+            )
+            axs[i][1].axhline(1, color='red', linestyle='--', linewidth=1)
 
-        plt.tight_layout()
-        plt.show() 
+            axs[i][0].set_xlim(binning[i][0], binning[i][1])
+            axs[i][0].set_title('')
+            axs[i][0].set_xlabel(axis_titles[i])
+            axs[i][0].set_ylabel('Bin Content')
+            axs[i][0].legend(loc='best')
+
+            # Formatting ratio plot
+            axs[i][1].set_xlim(binning[i][0], binning[i][1])
+            axs[i][1].set_ylim(0.8, 1.2)
+            axs[i][1].set_xlabel('')
+            axs[i][1].set_ylabel('Data/Model')
+            axs[i][1].tick_params(axis='y', which='both', right=False)
+
+            plt.setp(axs[i][0].get_xticklabels(), visible=False)
+
+        plt.tight_layout(h_pad=0.5)
+        plt.show()
 
 # The reader class aim is to make everything above not necessary to be fully undestood
 # A config file is provided and the reader produces itself the necessary objects:
