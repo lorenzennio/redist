@@ -1,17 +1,8 @@
-from hammer import hepmc, pdg
-from hammer.hammerlib import (FourMomentum, Hammer, IOBuffer,
-                              Particle, Process, RecordType)
+from hammer.hammerlib import (Hammer, IOBuffer,
+                              RecordType)
 
-import configparser
-import ast
-
-import re
 from copy import deepcopy
-import itertools
-from collections import defaultdict
-from collections.abc import Iterable
 import numpy as np
-import scipy as sp
 import json
 import pyhf
 import matplotlib.pyplot as plt
@@ -382,10 +373,10 @@ class MultiHammerCacher:
 # the background cacher access not hammer reweighted histograms and gives us in a format
 # similar to the HammerCacher (easier to handle them together later)
 class BackgroundCacher:
-    def __init__(self, fileName, histoName):
+    def __init__(self, fileName, histoName, strides):
         self._fileName = fileName
         self._histoName = histoName
-        self._strides = [48,8,1]
+        self._strides = strides
 
         file = ROOT.TFile.Open(self._fileName, "READ")
         if not file or file.IsZombie():
@@ -604,12 +595,12 @@ class template:
         return bin_contents 
 
 # the fitter contains a template list and data (toys in the examples)
-# it contains the definition of functions like chi2 and nll to implement later
-# fits in iminuit and a small plotting setup
+# it contains the definition of a nul_pdf and an alternative_pdf to be injected in the definition of the modifier
+# a small plotting interface is implemented to retireve the projected histograms (from the strides) and overlay data
 class fitter:
-    def __init__(self,template_list,data,nul_params):
+    def __init__(self,template_list,nul_params):
         self._template_list = template_list
-        self._data = data
+        self._data = np.array([])
         self._nul_params = nul_params
     
     def nul_pdf(self):
@@ -627,24 +618,10 @@ class fitter:
                 res += temp.generate_template(**kwargs)
             return res
         return func
-
-    def chi_squared(self, **kwargs):
-        model = np.zeros(self._template_list[0]._nobs)
-        for template in self._template_list:
-            model += template.generate_template(**kwargs)
-
-        chi2 = np.sum(((self._data - model) ** 2) / (model + 1e-8))
-        return chi2
     
-    def negative_log_likelihood(self,**kwargs):
-        model = np.zeros(self._template_list[0]._nobs)
-        for template in self._template_list:
-            model += template.generate_template(**kwargs)
-        epsilon = 1e-9
-        model = np.maximum(model, epsilon)
-        nll = np.sum(model - self._data * np.log(model + epsilon))
-        return nll
-    
+    def upload_data(self,data):
+        self._data = data
+
     def get_histos(self,input):
         v_out = []
         nobs = self._template_list[0]._nobs
@@ -682,19 +659,6 @@ class fitter:
         contributions.append(self.get_histos(self._data))
         for k in range(len(self._template_list)):
             contributions.append(self.get_histos(self._template_list[k].generate_template(**kwargs)))
-            
-#        contributions_SM = []
-#        contributions_SM.append(self.get_histos(self._data))
-        
-#        for k in range(len(self._template_list)):
-#            SM_args = kwargs
-#            list_one = ["SM","lumi"]
-#            for key, value in SM_args.items():
-#                if key in list_one:
-#                    SM_args[key] = 1.
-#                else:
-#                    SM_args[key] = 0.
-#            contributions_SM.append(self.get_histos(self._template_list[k].generate_template(**SM_args)))
         n_histos = len(contributions[0])
         n_contributions = len(contributions)
         
@@ -728,16 +692,10 @@ class fitter:
                         align='edge', alpha=0.5, color=colors[j], label=self._template_list[j-1]._name
                     )
                     total_contribution += bin_content  
-#                    total_contribution_SM += contributions_SM[j][i]
             axs[i].step(
                 bin_edges, np.append(total_contribution, total_contribution[-1]),  
                 where='post', color='black', linestyle='--', linewidth=1.5, label='Total'
             )
-
-#            axs[i].step(
-#                bin_edges, np.append(total_contribution_SM, total_contribution_SM[-1]),  
-#                where='post', color='red', linestyle='--', linewidth=1., label='Pure SM'
-#            )
            
             axs[i].set_xlim(binning[i][0], binning[i][1])
             axs[i].set_title('')
@@ -756,65 +714,65 @@ class fitter:
 class Reader:
     def __init__(self, filename):
         self.name = filename
-        self.config = configparser.ConfigParser()
-        self.config.read(filename)
+        with open(filename, 'r') as f:
+            self.config = json.load(f)
         
-    def createFitter(self,verbose=False):
+    def createFitter(self, verbose=False):
         template_list = []
-        toy_list = []
         nul_params = {}
 
-        for mode in self.config.sections():
+        for mode, mode_config in self.config.items():
             hac_list = []
-            if(verbose):
+            if verbose:
                 print(f"Reading the mode: {mode}")
-            fileNames = ast.literal_eval(self.config[mode]["fileNames"])
-            histoname = self.config.get(mode,"histoname")
-            ffscheme = self.config.get(mode,"ffscheme")
-            wcscheme = self.config.get(mode,"wcscheme")
-            formfactors = ast.literal_eval(self.config[mode]["formfactors"])
-            wilsoncoefficients = ast.literal_eval(self.config[mode]["wilsoncoefficients"])
-            scalefactor = ast.literal_eval(self.config[mode]["scalefactor"])
-            nuisance = ast.literal_eval(self.config[mode]["nuisance"])
-            is_hammer_weighted = ast.literal_eval(self.config[mode]["ishammerweighted"])
-            histo_infos = histo_info(ast.literal_eval(self.config[mode]["axistitles"]), ast.literal_eval(self.config[mode]["binning"]))
-            _wilsoncoefficients = {"SM":wilsoncoefficients[list(wilsoncoefficients.keys())[0]],"S_qLlL": complex(wilsoncoefficients[list(wilsoncoefficients.keys())[1]], wilsoncoefficients[list(wilsoncoefficients.keys())[2]]),"S_qRlL": complex(wilsoncoefficients[list(wilsoncoefficients.keys())[3]], wilsoncoefficients[list(wilsoncoefficients.keys())[4]]),"V_qLlL": complex(wilsoncoefficients[list(wilsoncoefficients.keys())[5]], wilsoncoefficients[list(wilsoncoefficients.keys())[6]]),"V_qRlL": complex(wilsoncoefficients[list(wilsoncoefficients.keys())[7]], wilsoncoefficients[list(wilsoncoefficients.keys())[8]]),"T_qLlL": complex(wilsoncoefficients[list(wilsoncoefficients.keys())[9]], wilsoncoefficients[list(wilsoncoefficients.keys())[10]])}
+            fileNames = mode_config["fileNames"]
+            histoname = mode_config["histoname"]
+            ffscheme = mode_config["ffscheme"]
+            wcscheme = mode_config["wcscheme"]
+            formfactors = mode_config["formfactors"]
+            wilsoncoefficients = mode_config["wilsoncoefficients"]
+            scalefactor = mode_config["scalefactor"]
+            nuisance = mode_config["nuisance"]
+            is_hammer_weighted = mode_config["ishammerweighted"]
+            histo_infos = histo_info(mode_config["axistitles"], mode_config["binning"])
+            _wilsoncoefficients = {
+                "SM": wilsoncoefficients["SM"],
+                "S_qLlL": complex(wilsoncoefficients["Re_S_qLlL"], wilsoncoefficients["Im_S_qLlL"]),
+                "S_qRlL": complex(wilsoncoefficients["Re_S_qRlL"], wilsoncoefficients["Im_S_qRlL"]),
+                "V_qLlL": complex(wilsoncoefficients["Re_V_qLlL"], wilsoncoefficients["Im_V_qLlL"]),
+                "V_qRlL": complex(wilsoncoefficients["Re_V_qRlL"], wilsoncoefficients["Im_V_qRlL"]),
+                "T_qLlL": complex(wilsoncoefficients["Re_T_qLlL"], wilsoncoefficients["Im_T_qLlL"])
+            }
             if is_hammer_weighted:
                 for fileName in fileNames:
                     hac_list.append(HammerCacher(fileName, histoname, ffscheme, wcscheme, formfactors, _wilsoncoefficients, scalefactor, histo_infos))
                 cacher = MultiHammerCacher(hac_list)
                 if wcscheme == "BtoCTauNu":
                     wrapper = HammerNuisWrapper(cacher, **nuisance)
-                    temp = template(mode,wrapper)
+                    temp = template(mode, wrapper)
                     template_list.append(temp)
-                    toy_parameters = wilsoncoefficients | formfactors | nuisance
-                    for key, value in toy_parameters.items():
+                    parameters = wilsoncoefficients | formfactors | nuisance
+                    for key, value in parameters.items():
                         if key not in nul_params:
                             nul_params[key] = value
-                    toy_list.append(temp.generate_toy(**toy_parameters))
                 else:
                     wrapper = HammerNuisWrapperSM(cacher, **nuisance)
-                    temp = template(mode,wrapper)
+                    temp = template(mode, wrapper)
                     template_list.append(temp)
-                    toy_parameters = wilsoncoefficients | formfactors | nuisance
-                    for key, value in toy_parameters.items():
+                    parameters = wilsoncoefficients | formfactors | nuisance
+                    for key, value in parameters.items():
                         if key not in nul_params:
                             nul_params[key] = value
-                    toy_list.append(temp.generate_toy(**toy_parameters))
             else:
                 for fileName in fileNames:
                     hac_list.append(BackgroundCacher(fileName, histoname))
                 cacher = hac_list[0]
-                wrapper = BackgroundNuisWrapper(cacher,**nuisance)
-                temp = template(mode,wrapper)
+                wrapper = BackgroundNuisWrapper(cacher, **nuisance)
+                temp = template(mode, wrapper)
                 template_list.append(temp)
-                toy_parameters = nuisance
-                for key, value in toy_parameters.items():
-                        if key not in nul_params:
-                            nul_params[key] = value
-                toy_list.append(temp.generate_toy(**toy_parameters))
+                parameters = nuisance
+                for key, value in parameters.items():
+                    if key not in nul_params:
+                        nul_params[key] = value
 
-        toy_tot = np.zeros(len(toy_list[0]))
-        for toy in toy_list:
-            toy_tot+=toy
-        return fitter(template_list,toy_tot,nul_params)
+        return fitter(template_list, nul_params)
