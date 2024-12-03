@@ -152,16 +152,6 @@ def load_hammer(file, alt_dist, null_dist, return_modifier=False, return_data=Fa
     if return_data: return model, d['data']
     return model
 
-def _read_pars(json_input):
-    """
-    Parse lists to tuples for pyhf.
-    """
-    new_pars = deepcopy(json_input)
-    for k, v in json_input.items():
-        new_pars[k]['inits'] = tuple(v['inits'])
-        new_pars[k]['bounds'] = tuple(tuple(w) for w in v['bounds'])
-    return new_pars
-
 # the histo_info is a utility class mainly used for plotting
 class histo_info:
     def __init__(self, axis_titles, binning):
