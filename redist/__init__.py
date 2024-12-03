@@ -1,4 +1,4 @@
 import redist.modifier
 import redist.plot
 import redist.custom_modifier
-import redist.hammer_fit
+import redist.modifier_hammer

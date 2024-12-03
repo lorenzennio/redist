@@ -10,7 +10,7 @@ import matplotlib.gridspec as gridspec
 
 from redist.modifier import Modifier
 
-class Hammer_Modifier(Modifier):
+class Modifier_Hammer(Modifier):
     def __init__(self, new_pars, alt_dist, null_dist, name = None, cutoff=None, weight_bound=None, allow_negative_weights=False):
         """
         Args:
@@ -138,7 +138,7 @@ def load_hammer(file, alt_dist, null_dist, return_modifier=False, return_data=Fa
         new_pars.update(_read_pars(pars))
     cmods = []
     for name, cutoff, weight_bound in zip(d['name'], d['cutoff'], d['weight_bound']):
-        cmods.append(Hammer_Modifier(new_pars, alt_dist, null_dist,
+        cmods.append(Modifier_Hammer(new_pars, alt_dist, null_dist,
                               name=name, cutoff=cutoff, weight_bound=weight_bound))
 
     expanded_pyhf = {}

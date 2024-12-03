@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 import pyhf
 import json
-from redist import hammer_fit
+from redist import modifier_hammer
 from redist import modifier
 
 dir_path = os.path.dirname(__file__)
@@ -14,13 +14,13 @@ def null_dist(a=10.):
 def alt_dist(a=1., **kwargs):
     return np.array([a*(1+kwargs["h[0]"]+kwargs["h[1]"]),a*(1+3*kwargs["h[0]"]+9*kwargs["h[1]"])])
 
-# Test class for Hammer_Modifier
+# Test class for Modifier_Hammer
 class TestHammerModifier:
     new_params = {
             'a'   :{'inits': (1.,), 'bounds': ((0., 10.),), 'paramset_type': 'unconstrained'},
             'h'   :{'inits': (1.,1.), 'bounds': (), 'cov': [[0.5,0.1],[0.1,0.5]], 'paramset_type': 'constrained_by_normal'}
         }
-    cmod = hammer_fit.Hammer_Modifier(new_params, alt_dist, null_dist)
+    cmod = modifier_hammer.Modifier_Hammer(new_params, alt_dist, null_dist)
     
     file = dir_path + "/models/simple_model.json"
 
