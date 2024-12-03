@@ -10,6 +10,8 @@ import matplotlib.gridspec as gridspec
 
 from redist.modifier import Modifier
 
+from redist import modifier
+
 class Modifier_Hammer(Modifier):
     def __init__(self, new_pars, alt_dist, null_dist, name = None, cutoff=None, weight_bound=None, allow_negative_weights=False):
         """
@@ -135,7 +137,7 @@ def load_hammer(file, alt_dist, null_dist, return_modifier=False, return_data=Fa
 
     new_pars = {}
     for pars in d['new_pars']:
-        new_pars.update(_read_pars(pars))
+        new_pars.update(modifier._read_pars(pars))
     cmods = []
     for name, cutoff, weight_bound in zip(d['name'], d['cutoff'], d['weight_bound']):
         cmods.append(Modifier_Hammer(new_pars, alt_dist, null_dist,
@@ -195,9 +197,9 @@ class HammerCacher:
                         if not buf.load(fin):
                             break
     
-        self._ham.set_ff_eigenvectors("BtoD*","BLPRXPVar",self._FFs)
+        self._ham.set_ff_eigenvectors(self._FFScheme["Process"],self._FFScheme["SchemeVar"],self._FFs)
         self._ham.set_wilson_coefficients(self._WilsonSet, self._wcs)
-        self._histo = self._ham.get_histogram(histoName, FFscheme)
+        self._histo = self._ham.get_histogram(histoName, FFscheme["name"])
         dims = self._ham.get_histogram_shape(histoName)
         dims = dims[1:] + dims[:1]
         dims.pop()
@@ -244,12 +246,12 @@ class HammerCacher:
     def getHistoElement(self ,indices, wcs, FFs):
         pos = calcPos(indices)
         if not self.checkFFCache(FFs):
-            self._ham.set_ff_eigenvectors("BtoD*", "BLPRXPVar", FFs)
-            self._histo = self._ham.get_histogram(self._histoName, self._FFScheme)
+            self._ham.set_ff_eigenvectors(self._FFScheme["Process"], self._FFScheme["SchemeVar"], FFs)
+            self._histo = self._ham.get_histogram(self._histoName, self._FFScheme["name"])
         if not self.checkWCCache(wcs):
             self._ham.reset_wilson_coefficients(self._WilsonSet)
             self._ham.set_wilson_coefficients(self._WilsonSet, wcs)
-            self._histo = self._ham.get_histogram(self._histoName, self._FFScheme)
+            self._histo = self._ham.get_histogram(self._histoName, self._FFScheme["name"])
         return self._histo[pos].sum_wi * scaleFactor
     
     def getHistoTotalSM(self):
@@ -257,40 +259,40 @@ class HammerCacher:
         wcs = {"SM" : 1.0, "S_qLlL" : 0., "S_qRlL" : 0., "V_qLlL" : 0., "V_qRlL" : 0., "T_qLlL" : 0.0}
         self._ham.reset_wilson_coefficients(self._WilsonSet)
         self._ham.set_wilson_coefficients(self._WilsonSet, wcs)
-        self._histo = self._ham.get_histogram(self._histoName, self._FFScheme)
+        self._histo = self._ham.get_histogram(self._histoName, self._FFScheme["name"])
         for ni in range(self._nobs):
             total += self._histo[ni].sum_wi
         return total
     
     def getHistoTotal(self, wcs, FFs):
         total = 0
-        self._ham.set_ff_eigenvectors("BtoD*", "BLPRXPVar", FFs)
+        self._ham.set_ff_eigenvectors(self._FFScheme["Process"], self._FFScheme["SchemeVar"], FFs)
         self.ham.reset_wilson_coefficients(self._WilsonSet, wcs)
-        self._histo = self._ham.get_histogram(self._histoName, self._FFScheme)
+        self._histo = self._ham.get_histogram(self._histoName, self._FFScheme["name"])
         for ni in range(nobs):
             total += _histo[ni].sumWi
         return total
     
     def getHistoElementByPos(self, pos, wcs, FFs):
         if not self.checkFFCache(FFs):
-            self._ham.reset_ff_eigenvectors("BtoD*", "BLPRXPVar")
-            self._ham.set_ff_eigenvectors("BtoD*", "BLPRXPVar", FFs)
-            self._histo = self._ham.get_histogram(self._histoName, self._FFScheme)
+            self._ham.reset_ff_eigenvectors(self._FFScheme["Process"], self._FFScheme["SchemeVar"])
+            self._ham.set_ff_eigenvectors(self._FFScheme["Process"], self._FFScheme["SchemeVar"], FFs)
+            self._histo = self._ham.get_histogram(self._histoName, self._FFScheme["name"])
         if not self.checkWCCache(wcs):
             self._ham.reset_wilson_coefficients(self._WilsonSet)
             self._ham.set_wilson_coefficients(self._WilsonSet, wcs)
-            self._histo = self._ham.get_histogram(self._histoName, self._FFScheme)
+            self._histo = self._ham.get_histogram(self._histoName, self._FFScheme["name"])
         return self._histo[pos].sum_wi * self._scaleFactor / self._normFactor
     
     def getHistoElementByPosNoScale(self, pos, wcs, FFs):
         if not self.checkFFCache(FFs):
-            self._ham.reset_ff_eigenvectors("BtoD*", "BLPRXPVar")
-            self._ham.set_ff_eigenvectors("BtoD*", "BLPRXPVar", FFs)
-            self._histo = self._ham.get_histogram(self._histoName, self._FFScheme)
+            self._ham.reset_ff_eigenvectors(self._FFScheme["Process"], self._FFScheme["SchemeVar"])
+            self._ham.set_ff_eigenvectors(self._FFScheme["Process"], self._FFScheme["SchemeVar"], FFs)
+            self._histo = self._ham.get_histogram(self._histoName, self._FFScheme["name"])
         if not self.checkWCCache(wcs):
             self._ham.reset_wilson_coefficients(self._WilsonSet)
             self._ham.set_wilson_coefficients(self._WilsonSet, wcs)
-            self._histo = self._ham.get_histogram(self._histoName, self._FFScheme)
+            self._histo = self._ham.get_histogram(self._histoName, self._FFScheme["name"])
         return self._histo[pos].sum_wi
 
     def getHistoElementByPosSM(self, pos, wcs, FFs):
@@ -300,12 +302,12 @@ class HammerCacher:
         wcs["V_qRlL"] = 0. 
         wcs["T_qLlL"] = 0.
         if not self.checkFFCache(FFs):
-            self._ham.set_ff_eigenvectors("BtoD*", "BLPRXPVar", FFs)
-            self._histo = self._ham.get_histogram(self._histoName, self._FFScheme)
+            self._ham.set_ff_eigenvectors(self._FFScheme["Process"], self._FFScheme["SchemeVar"], FFs)
+            self._histo = self._ham.get_histogram(self._histoName, self._FFScheme["name"])
         if not self.checkWCCache(wcs):
             self._ham.reset_wilson_coefficients(self._WilsonSet)
             self._ham.set_wilson_coefficients(self._WilsonSet, wcs)
-            self._histo = self._ham.get_histogram(self._histoName, self._FFScheme)
+            self._histo = self._ham.get_histogram(self._histoName, self._FFScheme["name"])
         return self._histo[pos].sum_wi * self._scaleFactor / self._normFactor
 
     def getHistoElementByPosNoScaleSM(self, pos, wcs, FFs):
@@ -315,12 +317,12 @@ class HammerCacher:
         wcs["V_qRlL"] = 0. 
         wcs["T_qLlL"] = 0.
         if not self.checkFFCache(FFs):
-            self._ham.set_ff_eigenvectors("BtoD*", "BLPRXPVar", FFs)
-            self._histo = self._ham.get_histogram(self._histoName, self._FFScheme)
+            self._ham.set_ff_eigenvectors(self._FFScheme["Process"], self._FFScheme["SchemeVar"], FFs)
+            self._histo = self._ham.get_histogram(self._histoName, self._FFScheme["name"])
         if not self.checkWCCache(wcs):
             self._ham.reset_wilson_coefficients(self._WilsonSet)
             self._ham.set_wilson_coefficients(self._WilsonSet, wcs)
-            self._histo = self._ham.get_histogram(self._histoName, self._FFScheme)
+            self._histo = self._ham.get_histogram(self._histoName, self._FFScheme["name"])
         return self._histo[pos].sum_wi
 
 # Multi hammer cacher allows you to store multiple histograms in multiple files
