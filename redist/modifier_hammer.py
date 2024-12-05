@@ -256,7 +256,12 @@ class HammerCacher:
     
     def getHistoTotalSM(self):
         total = 0
-        wcs = {"SM" : 1.0, "S_qLlL" : 0., "S_qRlL" : 0., "V_qLlL" : 0., "V_qRlL" : 0., "T_qLlL" : 0.0}
+        wcs = {}
+        for key, value in self._wcs.items():
+            if key == 'SM':
+                wcs[key] = 1.
+            else:
+                wcs[key] = 0.
         self._ham.reset_wilson_coefficients(self._WilsonSet)
         self._ham.set_wilson_coefficients(self._WilsonSet, wcs)
         self._histo = self._ham.get_histogram(self._histoName, self._FFScheme["name"])
@@ -296,11 +301,9 @@ class HammerCacher:
         return self._histo[pos].sum_wi
 
     def getHistoElementByPosSM(self, pos, wcs, FFs):
-        wcs["S_qLlL"] = 0.
-        wcs["S_qRlL"] = 0.
-        wcs["V_qLlL"] = 0. 
-        wcs["V_qRlL"] = 0. 
-        wcs["T_qLlL"] = 0.
+        for key in wcs.keys():
+            if key != 'SM':
+                wcs[key] = 0.
         if not self.checkFFCache(FFs):
             self._ham.set_ff_eigenvectors(self._FFScheme["Process"], self._FFScheme["SchemeVar"], FFs)
             self._histo = self._ham.get_histogram(self._histoName, self._FFScheme["name"])
@@ -311,11 +314,9 @@ class HammerCacher:
         return self._histo[pos].sum_wi * self._scaleFactor / self._normFactor
 
     def getHistoElementByPosNoScaleSM(self, pos, wcs, FFs):
-        wcs["S_qLlL"] = 0.
-        wcs["S_qRlL"] = 0.
-        wcs["V_qLlL"] = 0. 
-        wcs["V_qRlL"] = 0. 
-        wcs["T_qLlL"] = 0.
+        for key in wcs.keys():
+            if key != 'SM':
+                wcs[key] = 0.
         if not self.checkFFCache(FFs):
             self._ham.set_ff_eigenvectors(self._FFScheme["Process"], self._FFScheme["SchemeVar"], FFs)
             self._histo = self._ham.get_histogram(self._histoName, self._FFScheme["name"])
@@ -352,11 +353,9 @@ class MultiHammerCacher:
     
     def getHistoElementByPosSM(self, pos, wcs, FFs):
         res = 0
-        wcs["S_qLlL"] = 0.
-        wcs["S_qRlL"] = 0.
-        wcs["V_qLlL"] = 0. 
-        wcs["V_qRlL"] = 0. 
-        wcs["T_qLlL"] = 0.
+        for key in wcs.keys():
+            if key != 'SM':
+                wcs[key] = 0.
         for i in range(len(self._cacherList)):
             res += self._cacherList[i].getHistoElementByPosNoScale(pos,wcs,FFs)
             self._wcs = wcs
@@ -417,7 +416,7 @@ class HammerNuisWrapper:
     
     def set_wcs(self,wcs):
         self._wcs = {"SM":wcs[list(wcs.keys())[0]],"S_qLlL": complex(wcs[list(wcs.keys())[1]], wcs[list(wcs.keys())[2]]),"S_qRlL": complex(wcs[list(wcs.keys())[3]], wcs[list(wcs.keys())[4]]),"V_qLlL": complex(wcs[list(wcs.keys())[5]], wcs[list(wcs.keys())[6]]),"V_qRlL": complex(wcs[list(wcs.keys())[7]], wcs[list(wcs.keys())[8]]),"T_qLlL": complex(wcs[list(wcs.keys())[9]], wcs[list(wcs.keys())[10]])}
-
+    
     def set_FFs(self,FFs):
         FFs_temp = {}
         for key, value in FFs.items():
@@ -461,6 +460,11 @@ class HammerNuisWrapperSM:
         self._histo_infos = hac._histo_infos
     
     def set_wcs(self,wcs):
+        #for key in self._wcs.keys():
+        #    if key == 'SM':
+        #        self._wcs[key] = wcs[key]
+        #    else:
+        #        self._wcs[key] = complex(wcs['Re_'+key],wcs['Im_'+key])
         self._wcs = {"SM":wcs[list(wcs.keys())[0]],"S_qLlL": complex(wcs[list(wcs.keys())[1]], wcs[list(wcs.keys())[2]]),"S_qRlL": complex(wcs[list(wcs.keys())[3]], wcs[list(wcs.keys())[4]]),"V_qLlL": complex(wcs[list(wcs.keys())[5]], wcs[list(wcs.keys())[6]]),"V_qRlL": complex(wcs[list(wcs.keys())[7]], wcs[list(wcs.keys())[8]]),"T_qLlL": complex(wcs[list(wcs.keys())[9]], wcs[list(wcs.keys())[10]])}
 
     def set_FFs(self,FFs):
@@ -749,14 +753,17 @@ class Reader:
             nuisance = mode_config["nuisance"]
             is_hammer_weighted = mode_config["ishammerweighted"]
             histo_infos = histo_info(mode_config["axistitles"], mode_config["binning"])
-            _wilsoncoefficients = {
-                "SM": wilsoncoefficients["SM"],
-                "S_qLlL": complex(wilsoncoefficients["Re_S_qLlL"], wilsoncoefficients["Im_S_qLlL"]),
-                "S_qRlL": complex(wilsoncoefficients["Re_S_qRlL"], wilsoncoefficients["Im_S_qRlL"]),
-                "V_qLlL": complex(wilsoncoefficients["Re_V_qLlL"], wilsoncoefficients["Im_V_qLlL"]),
-                "V_qRlL": complex(wilsoncoefficients["Re_V_qRlL"], wilsoncoefficients["Im_V_qRlL"]),
-                "T_qLlL": complex(wilsoncoefficients["Re_T_qLlL"], wilsoncoefficients["Im_T_qLlL"])
-            }
+            _wilsoncoefficients = {}
+            for key, value in wilsoncoefficients.items():
+                if key == 'SM':
+                    if key not in nul_params:
+                        nul_params[key] = value[0]
+                else:
+                    if 'Re_'+key not in nul_params:
+                        nul_params['Re_'+key] = value[0]
+                        nul_params['Im_'+key] = value[1]
+            for key, value in wilsoncoefficients.items():
+                _wilsoncoefficients[key] = complex(value[0],value[1])
             if is_hammer_weighted:
                 for fileName in fileNames:
                     hac_list.append(HammerCacher(fileName, histoname, ffscheme, wcscheme, formfactors, _wilsoncoefficients, scalefactor, histo_infos))
@@ -765,7 +772,7 @@ class Reader:
                     wrapper = HammerNuisWrapper(cacher, **nuisance)
                     temp = template(mode, wrapper)
                     template_list.append(temp)
-                    parameters = wilsoncoefficients | formfactors | nuisance
+                    parameters = formfactors | nuisance
                     for key, value in parameters.items():
                         if key not in nul_params:
                             nul_params[key] = value
@@ -773,7 +780,6 @@ class Reader:
                     wrapper = HammerNuisWrapperSM(cacher, **nuisance)
                     temp = template(mode, wrapper)
                     template_list.append(temp)
-                    parameters = wilsoncoefficients | formfactors | nuisance
                     for key, value in parameters.items():
                         if key not in nul_params:
                             nul_params[key] = value
