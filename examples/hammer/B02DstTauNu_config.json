@@ -33,6 +33,7 @@
       "lumi": 1.0
     },
     "ishammerweighted": true,
+    "injectNP":true,
     "axistitles": [
       "mmiss2 [GeV^2/c^4]",
       "q2 [GeV^2/c^4]",
@@ -74,6 +75,7 @@
       "lumi": 1.0
     },
     "ishammerweighted": true,
+    "injectNP":false,
     "axistitles": [
       "mmiss2 [GeV^2/c^4]",
       "q2 [GeV^2/c^4]",

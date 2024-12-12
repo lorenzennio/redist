@@ -213,13 +213,6 @@ class HammerCacher:
             self._strides.append(1)
         
         self._normFactor = self.getHistoTotalSM()
-        
-    def calcPos(self, indices):
-        sum_list = []  
-        total = 0 
-        sum_list = [i * j for i, j in zip(indices, self._strides)]  
-        total = sum(sum_list)
-        return total
     
     def checkWCCache(self, wcs):
         isCached = True
@@ -242,17 +235,6 @@ class HammerCacher:
                 self._FFs[key] = FFs[key]
                 isCached = False
         return isCached
-
-    def getHistoElement(self ,indices, wcs, FFs):
-        pos = calcPos(indices)
-        if not self.checkFFCache(FFs):
-            self._ham.set_ff_eigenvectors(self._FFScheme["Process"], self._FFScheme["SchemeVar"], FFs)
-            self._histo = self._ham.get_histogram(self._histoName, self._FFScheme["name"])
-        if not self.checkWCCache(wcs):
-            self._ham.reset_wilson_coefficients(self._WilsonSet)
-            self._ham.set_wilson_coefficients(self._WilsonSet, wcs)
-            self._histo = self._ham.get_histogram(self._histoName, self._FFScheme["name"])
-        return self._histo[pos].sum_wi * scaleFactor
     
     def getHistoTotalSM(self):
         total = 0
@@ -269,26 +251,6 @@ class HammerCacher:
             total += self._histo[ni].sum_wi
         return total
     
-    def getHistoTotal(self, wcs, FFs):
-        total = 0
-        self._ham.set_ff_eigenvectors(self._FFScheme["Process"], self._FFScheme["SchemeVar"], FFs)
-        self.ham.reset_wilson_coefficients(self._WilsonSet, wcs)
-        self._histo = self._ham.get_histogram(self._histoName, self._FFScheme["name"])
-        for ni in range(nobs):
-            total += _histo[ni].sumWi
-        return total
-    
-    def getHistoElementByPos(self, pos, wcs, FFs):
-        if not self.checkFFCache(FFs):
-            self._ham.reset_ff_eigenvectors(self._FFScheme["Process"], self._FFScheme["SchemeVar"])
-            self._ham.set_ff_eigenvectors(self._FFScheme["Process"], self._FFScheme["SchemeVar"], FFs)
-            self._histo = self._ham.get_histogram(self._histoName, self._FFScheme["name"])
-        if not self.checkWCCache(wcs):
-            self._ham.reset_wilson_coefficients(self._WilsonSet)
-            self._ham.set_wilson_coefficients(self._WilsonSet, wcs)
-            self._histo = self._ham.get_histogram(self._histoName, self._FFScheme["name"])
-        return self._histo[pos].sum_wi * self._scaleFactor / self._normFactor
-    
     def getHistoElementByPosNoScale(self, pos, wcs, FFs):
         if not self.checkFFCache(FFs):
             self._ham.reset_ff_eigenvectors(self._FFScheme["Process"], self._FFScheme["SchemeVar"])
@@ -299,19 +261,6 @@ class HammerCacher:
             self._ham.set_wilson_coefficients(self._WilsonSet, wcs)
             self._histo = self._ham.get_histogram(self._histoName, self._FFScheme["name"])
         return self._histo[pos].sum_wi
-
-    def getHistoElementByPosSM(self, pos, wcs, FFs):
-        for key in wcs.keys():
-            if key != 'SM':
-                wcs[key] = 0.
-        if not self.checkFFCache(FFs):
-            self._ham.set_ff_eigenvectors(self._FFScheme["Process"], self._FFScheme["SchemeVar"], FFs)
-            self._histo = self._ham.get_histogram(self._histoName, self._FFScheme["name"])
-        if not self.checkWCCache(wcs):
-            self._ham.reset_wilson_coefficients(self._WilsonSet)
-            self._ham.set_wilson_coefficients(self._WilsonSet, wcs)
-            self._histo = self._ham.get_histogram(self._histoName, self._FFScheme["name"])
-        return self._histo[pos].sum_wi * self._scaleFactor / self._normFactor
 
     def getHistoElementByPosNoScaleSM(self, pos, wcs, FFs):
         for key in wcs.keys():
@@ -752,6 +701,7 @@ class Reader:
             scalefactor = mode_config["scalefactor"]
             nuisance = mode_config["nuisance"]
             is_hammer_weighted = mode_config["ishammerweighted"]
+            injectNP = mode_config["injectNP"]
             histo_infos = histo_info(mode_config["axistitles"], mode_config["binning"])
             _wilsoncoefficients = {}
             for key, value in wilsoncoefficients.items():
@@ -768,7 +718,7 @@ class Reader:
                 for fileName in fileNames:
                     hac_list.append(HammerCacher(fileName, histoname, ffscheme, wcscheme, formfactors, _wilsoncoefficients, scalefactor, histo_infos))
                 cacher = MultiHammerCacher(hac_list)
-                if wcscheme == "BtoCTauNu":
+                if injectNP:
                     wrapper = HammerNuisWrapper(cacher, **nuisance)
                     temp = template(mode, wrapper)
                     template_list.append(temp)
