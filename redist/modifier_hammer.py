@@ -5,8 +5,6 @@ from copy import deepcopy
 import numpy as np
 import json
 import pyhf
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 
 from redist.modifier import Modifier
 
@@ -154,17 +152,11 @@ def load_hammer(file, alt_dist, null_dist, return_modifier=False, return_data=Fa
     if return_data: return model, d['data']
     return model
 
-# the histo_info is a utility class mainly used for plotting
-class histo_info:
-    def __init__(self, axis_titles, binning):
-        self._axis_titles = axis_titles
-        self._binning = binning
-
 # the hammer cacher class handles directly the hammer histogram
 # it access it and it changes, if required, the FF and the WC d.o.f
 # giving access to the histogram as it changes wrt them
 class HammerCacher:
-    def __init__(self, fileName, histoName, FFscheme, WilsonSet, FormFactors, WilsonCoefficients, scaleFactor, histo_infos, verbose=False):#, **kwargs):
+    def __init__(self, fileName, histoName, FFscheme, WilsonSet, FormFactors, WilsonCoefficients, scaleFactor, verbose=False):#, **kwargs):
         self._histoName = histoName 
         self._FFScheme = FFscheme
         self._WilsonSet = WilsonSet 
@@ -177,8 +169,6 @@ class HammerCacher:
         self._strides = [1]
         self._ham = Hammer()
         self._ham.set_units("GeV")
-
-        self._histo_infos = histo_infos
 
         buf = IOBuffer(RecordType.UNDEFINED)
         if(verbose):
@@ -287,7 +277,6 @@ class MultiHammerCacher:
         self._strides = cacherList[0]._strides
         self._wcs = cacherList[0]._wcs
         self._FFs = cacherList[0]._FFs
-        self._histo_infos = cacherList[0]._histo_infos
         for cacher in cacherList:
             self._cacherList.append(cacher)
             self._normFactor += cacher.getHistoTotalSM()
@@ -361,7 +350,6 @@ class HammerNuisWrapper:
         self._nbin = 0
         self._strides = hac._strides
         self._dim = len(hac._strides)
-        self._histo_infos = hac._histo_infos
     
     def set_wcs(self,wcs):
         self._wcs = {"SM":wcs[list(wcs.keys())[0]],"S_qLlL": complex(wcs[list(wcs.keys())[1]], wcs[list(wcs.keys())[2]]),"S_qRlL": complex(wcs[list(wcs.keys())[3]], wcs[list(wcs.keys())[4]]),"V_qLlL": complex(wcs[list(wcs.keys())[5]], wcs[list(wcs.keys())[6]]),"V_qRlL": complex(wcs[list(wcs.keys())[7]], wcs[list(wcs.keys())[8]]),"T_qLlL": complex(wcs[list(wcs.keys())[9]], wcs[list(wcs.keys())[10]])}
@@ -406,7 +394,6 @@ class HammerNuisWrapperSM:
         self._nbin = 0
         self._strides = hac._strides
         self._dim = len(hac._strides)
-        self._histo_infos = hac._histo_infos
     
     def set_wcs(self,wcs):
         #for key in self._wcs.keys():
@@ -488,7 +475,6 @@ class template:
         self._nFFs = len(self._wrap._FFs)
         self._nparams = len(self._wrap._params)
         self._strides = wrap._strides
-        self._histo_infos = wrap._histo_infos
     
     def generate_template(self, **kwargs):
         wcs = {}
@@ -568,112 +554,6 @@ class fitter:
     def upload_data(self,data):
         self._data = data
 
-    def get_histos(self,input):
-        v_out = []
-        nobs = self._template_list[0]._nobs
-        strides = self._template_list[0]._strides
-        n_histos = len(strides)
-        dim = np.zeros(n_histos)
-        index = np.zeros(n_histos)
-
-        for i in range(n_histos):
-            if(i==0):
-                dim[i]=int(nobs/strides[i])
-            else:
-                dim[i]=int(strides[i-1]/strides[i])
-
-        for i in range(n_histos):
-            histo = np.zeros(int(dim[i]))
-            v_out.append(histo)    
-        
-        for i in range(nobs):
-            for j in range(n_histos):
-                index[j]=i
-                for k in range(j):
-                    index[j]-=(index[k]*strides[k])
-                index[j] = int(index[j]/strides[j])
-                v_out[j][int(index[j])]+=input[i]
-
-        return v_out
-
-    def plot(self, **kwargs):
-        strides = self._template_list[0]._strides
-        n_histos = len(strides)
-        axis_titles = self._template_list[0]._histo_infos._axis_titles
-        binning = self._template_list[0]._histo_infos._binning
-        contributions = []
-        contributions.append(self.get_histos(self._data))
-        for k in range(len(self._template_list)):
-            contributions.append(self.get_histos(self._template_list[k].generate_template(**kwargs)))
-        n_histos = len(contributions[0])
-        n_contributions = len(contributions)
-
-        colors = plt.cm.viridis(np.linspace(0, 1, n_contributions))
-
-        fig = plt.figure(figsize=(8, 6 * n_histos))
-        gs = gridspec.GridSpec(n_histos * 2, 1, height_ratios=[4, 1] * n_histos) 
-
-        axs = []
-        for i in range(n_histos):
-            ax_main = fig.add_subplot(gs[i * 2])
-            ax_ratio = fig.add_subplot(gs[i * 2 + 1], sharex=ax_main)
-            axs.append((ax_main, ax_ratio))
-
-        for i in range(n_histos):
-            total_contribution = np.zeros(len(contributions[0][i]))
-            for j in range(n_contributions):
-                bin_content = contributions[j][i]
-                n_bins = len(bin_content)
-                bin_edges = np.linspace(binning[i][0], binning[i][1], n_bins + 1)
-
-                # Main plot
-                if j == 0:
-                    axs[i][0].errorbar(
-                        bin_edges[:-1] + np.diff(bin_edges) / 2,
-                        bin_content,                           
-                        yerr=np.sqrt(bin_content),              
-                        fmt='+',                                 
-                        alpha=1.,                                 
-                        label='Data'                             
-                    )
-                else:
-                    axs[i][0].bar(
-                        bin_edges[:-1], bin_content, width=np.diff(bin_edges),
-                        align='edge', alpha=0.5, color=colors[j], label=self._template_list[j-1]._name
-                    )
-                    total_contribution += bin_content
-
-            axs[i][0].step(
-                bin_edges, np.append(total_contribution, total_contribution[-1]),
-                where='post', color='black', linestyle='--', linewidth=1.5, label='Total'
-            )
-
-            ratio = contributions[0][i] / total_contribution
-            ratio_err = np.sqrt(contributions[0][i]) / total_contribution
-            axs[i][1].errorbar(
-                bin_edges[:-1] + np.diff(bin_edges) / 2, ratio, yerr=ratio_err,
-                fmt='+', alpha=1., label='Data'
-            )
-            axs[i][1].axhline(1, color='red', linestyle='--', linewidth=1)
-
-            axs[i][0].set_xlim(binning[i][0], binning[i][1])
-            axs[i][0].set_title('')
-            axs[i][0].set_xlabel(axis_titles[i])
-            axs[i][0].set_ylabel('Bin Content')
-            axs[i][0].legend(loc='best')
-
-            # Formatting ratio plot
-            axs[i][1].set_xlim(binning[i][0], binning[i][1])
-            axs[i][1].set_ylim(0.8, 1.2)
-            axs[i][1].set_xlabel('')
-            axs[i][1].set_ylabel('Data/Model')
-            axs[i][1].tick_params(axis='y', which='both', right=False)
-
-            plt.setp(axs[i][0].get_xticklabels(), visible=False)
-
-        plt.tight_layout(h_pad=0.5)
-        plt.show()
-
 # The reader class aim is to make everything above not necessary to be fully undestood
 # A config file is provided and the reader produces itself the necessary objects:
 # Cachers -> Wrappers -> Templates -> Fitter (returned)
@@ -702,7 +582,6 @@ class Reader:
             nuisance = mode_config["nuisance"]
             is_hammer_weighted = mode_config["ishammerweighted"]
             injectNP = mode_config["injectNP"]
-            histo_infos = histo_info(mode_config["axistitles"], mode_config["binning"])
             _wilsoncoefficients = {}
             for key, value in wilsoncoefficients.items():
                 if key == 'SM':
@@ -716,7 +595,7 @@ class Reader:
                 _wilsoncoefficients[key] = complex(value[0],value[1])
             if is_hammer_weighted:
                 for fileName in fileNames:
-                    hac_list.append(HammerCacher(fileName, histoname, ffscheme, wcscheme, formfactors, _wilsoncoefficients, scalefactor, histo_infos))
+                    hac_list.append(HammerCacher(fileName, histoname, ffscheme, wcscheme, formfactors, _wilsoncoefficients, scalefactor))
                 cacher = MultiHammerCacher(hac_list)
                 if injectNP:
                     wrapper = HammerNuisWrapper(cacher, **nuisance)

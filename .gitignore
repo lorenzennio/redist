@@ -6,11 +6,6 @@
 #*.npy
 # *.pkl
 
-#results
-*/results/
-*.json
-!examples/hammer/B02DstTauNu_config.json
-
 #cache
 */__pycache__/
 *.pyc
