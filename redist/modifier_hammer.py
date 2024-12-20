@@ -9,6 +9,7 @@ import pyhf
 from redist.modifier import Modifier
 
 from redist import modifier
+import ROOT
 
 class Modifier_Hammer(Modifier):
     def __init__(self, new_pars, alt_dist, null_dist, name = None, cutoff=None, weight_bound=None, allow_negative_weights=False):
