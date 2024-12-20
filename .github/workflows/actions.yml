@@ -10,14 +10,6 @@ jobs:
       # Check out the code from your repository
       - uses: actions/checkout@v4
 
-      # Clone the hammer dependency
-      - name: Clone hammer repository
-        run: |
-          git clone https://gitlab.com/mpapucci/Hammer.git
-          cd Hammer
-          git checkout tags/v.1.3.0 -b hammer-v1.3.0
-          python -m pip install -e .
-
       # Install dependencies for your project
       - name: Install dependencies
         run: |
