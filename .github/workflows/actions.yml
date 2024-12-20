@@ -10,6 +10,26 @@ jobs:
       # Check out the code from your repository
       - uses: actions/checkout@v4
 
+      # Clone hammer repository and checkout the specific tag
+      - name: Clone hammer repository and checkout tag v.1.3.0
+        run: |
+          git clone https://github.com/username/hammer.git
+          cd hammer
+          git checkout tags/v.1.3.0
+
+      # Build and install hammer with CMake
+      - name: Build and install hammer
+        run: |
+          cd hammer
+          mkdir build
+          mkdir install
+          cd build
+          cmake -DCMAKE_INSTALL_PREFIX=../install -WITH_PYTHON=ON ..
+          make
+          make install
+          cd pyext
+          python -m pip install -e .
+
       # Install dependencies for your project
       - name: Install dependencies
         run: |
