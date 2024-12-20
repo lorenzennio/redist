@@ -42,7 +42,7 @@ class Modifier_Hammer(Modifier):
 
         # cache previously called function values
         self.cache = {}
-    
+
     def get_weights(self, pars):
         """
         Compute the new weights and process them for sensibility.
@@ -67,7 +67,7 @@ class Modifier_Hammer(Modifier):
         #flatten the weights
         weights = weights.reshape(-1, order='F')
         return weights
-    
+
     def weight_func(self, pars):
         """
         Build function that applies weights to histogram.
@@ -91,7 +91,7 @@ class Modifier_Hammer(Modifier):
         self.cache[key] = func
 
         return func
-    
+
 def save_hammer(file, spec, cmods, data=None):
     """
     Save the custom model, mapping distribution (and data).
@@ -157,14 +157,14 @@ def load_hammer(file, alt_dist, null_dist, return_modifier=False, return_data=Fa
 # giving access to the histogram as it changes wrt them
 class HammerCacher:
     def __init__(self, fileName, histoName, FFscheme, WilsonSet, FormFactors, WilsonCoefficients, scaleFactor, verbose=False):#, **kwargs):
-        self._histoName = histoName 
+        self._histoName = histoName
         self._FFScheme = FFscheme
-        self._WilsonSet = WilsonSet 
+        self._WilsonSet = WilsonSet
         self._scaleFactor = scaleFactor
-        
+
         self._wcs = WilsonCoefficients
         self._FFs = FormFactors
-        
+
         self._nobs = 1
         self._strides = [1]
         self._ham = Hammer()
@@ -186,24 +186,24 @@ class HammerCacher:
                             info = self._ham.load_histogram(buf)
                         if not buf.load(fin):
                             break
-    
+
         self._ham.set_ff_eigenvectors(self._FFScheme["Process"],self._FFScheme["SchemeVar"],self._FFs)
         self._ham.set_wilson_coefficients(self._WilsonSet, self._wcs)
         self._histo = self._ham.get_histogram(histoName, FFscheme["name"])
         dims = self._ham.get_histogram_shape(histoName)
         dims = dims[1:] + dims[:1]
         dims.pop()
-        
+
         ndims = self._ham.get_histogram_shape(histoName)
-        
+
         for ndim in ndims:
             self._nobs*=ndim
         for dim in dims:
             self._strides = [c * dim for c in self._strides]
             self._strides.append(1)
-        
+
         self._normFactor = self.getHistoTotalSM()
-    
+
     def checkWCCache(self, wcs):
         isCached = True
         for key in wcs:
@@ -225,7 +225,7 @@ class HammerCacher:
                 self._FFs[key] = FFs[key]
                 isCached = False
         return isCached
-    
+
     def getHistoTotalSM(self):
         total = 0
         wcs = {}
@@ -240,7 +240,7 @@ class HammerCacher:
         for ni in range(self._nobs):
             total += self._histo[ni].sum_wi
         return total
-    
+
     def getHistoElementByPosNoScale(self, pos, wcs, FFs):
         if not self.checkFFCache(FFs):
             self._ham.reset_ff_eigenvectors(self._FFScheme["Process"], self._FFScheme["SchemeVar"])
@@ -280,7 +280,7 @@ class MultiHammerCacher:
         for cacher in cacherList:
             self._cacherList.append(cacher)
             self._normFactor += cacher.getHistoTotalSM()
-    
+
     def getHistoElementByPos(self, pos, wcs, FFs):
         res = 0
         for i in range(len(self._cacherList)):
@@ -288,7 +288,7 @@ class MultiHammerCacher:
             self._wcs = wcs
             self._FFs = FFs
         return res * self._scaleFactor / self._normFactor
-    
+
     def getHistoElementByPosSM(self, pos, wcs, FFs):
         res = 0
         for key in wcs.keys():
@@ -297,7 +297,7 @@ class MultiHammerCacher:
         for i in range(len(self._cacherList)):
             res += self._cacherList[i].getHistoElementByPosNoScale(pos,wcs,FFs)
             self._wcs = wcs
-            self._FFs = FFs 
+            self._FFs = FFs
         return res * self._scaleFactor / self._normFactor
 
 # the background cacher access not hammer reweighted histograms and gives us in a format
@@ -312,7 +312,7 @@ class BackgroundCacher:
         if not file or file.IsZombie():
             print("Error: Could not open file.")
             return
-        
+
         hist = file.Get(self._histoName)
         if not hist:
             print(f"Error: Histogram '{self._histoName}' not found in file '{self._fileName}'.")
@@ -333,7 +333,7 @@ class BackgroundCacher:
     def getHistoElementByPos(self, pos,wcs,FFs):
         return self._histo[pos] / self._normFactor
 
-        
+
 # here we define the multiplicative nuisance parameters to apply to the hammer
 # reweighted histogram
 # the wrapper can change the d.o.f of the contribution and returns the content of
@@ -350,27 +350,27 @@ class HammerNuisWrapper:
         self._nbin = 0
         self._strides = hac._strides
         self._dim = len(hac._strides)
-    
+
     def set_wcs(self,wcs):
         self._wcs = {"SM":wcs[list(wcs.keys())[0]],"S_qLlL": complex(wcs[list(wcs.keys())[1]], wcs[list(wcs.keys())[2]]),"S_qRlL": complex(wcs[list(wcs.keys())[3]], wcs[list(wcs.keys())[4]]),"V_qLlL": complex(wcs[list(wcs.keys())[5]], wcs[list(wcs.keys())[6]]),"V_qRlL": complex(wcs[list(wcs.keys())[7]], wcs[list(wcs.keys())[8]]),"T_qLlL": complex(wcs[list(wcs.keys())[9]], wcs[list(wcs.keys())[10]])}
-    
+
     def set_FFs(self,FFs):
         FFs_temp = {}
         for key, value in FFs.items():
             if key in self._FFs.keys():
                 FFs_temp[key] = float(value)
         self._FFs = FFs_temp
-    
+
     def set_params(self,params):
         params_temp = {}
         for key, value in params.items():
             if key in self._params.keys():
                 params_temp[key] = value
         self._params = params_temp
-        
+
     def set_nbin(self,nbin):
         self._nbin = nbin
-    
+
     def evaluate(self):
         val = self._hac.getHistoElementByPos(self._nbin, self._wcs, self._FFs)
         for key, value in self._params.items():
@@ -394,7 +394,7 @@ class HammerNuisWrapperSM:
         self._nbin = 0
         self._strides = hac._strides
         self._dim = len(hac._strides)
-    
+
     def set_wcs(self,wcs):
         #for key in self._wcs.keys():
         #    if key == 'SM':
@@ -409,17 +409,17 @@ class HammerNuisWrapperSM:
             if key in self._FFs.keys():
                 FFs_temp[key] = float(value)
         self._FFs = FFs_temp
-    
+
     def set_params(self,params):
         params_temp = {}
         for key, value in params.items():
             if key in self._params.keys():
                 params_temp[key] = value
         self._params = params_temp
-        
+
     def set_nbin(self,nbin):
         self._nbin = nbin
-    
+
     def evaluate(self):
         val = self._hac.getHistoElementByPosSM(self._nbin, self._wcs, self._FFs)
         for key, value in self._params.items():
@@ -457,13 +457,13 @@ class BackgroundNuisWrapper:
             if key in self._params.keys():
                 params_temp[key] = value
         self._params = params_temp
-    
+
     def evaluate(self):
         val = self._bkg.getHistoElementByPos(self._nbin, self._wcs, self._FFs)
         for key, value in self._params.items():
             val = val*value
         return val
-    
+
 # the template class takes the wrapper and allows to generate templates, and toys
 # wrt any set of d.o.f we want
 class template:
@@ -475,7 +475,7 @@ class template:
         self._nFFs = len(self._wrap._FFs)
         self._nparams = len(self._wrap._params)
         self._strides = wrap._strides
-    
+
     def generate_template(self, **kwargs):
         wcs = {}
         FFs = {}
@@ -498,7 +498,7 @@ class template:
             self._wrap.set_nbin(i)
             val=self._wrap.evaluate()
             bin_contents[i]+=val
-        
+
         return bin_contents
 
     def generate_toy(self, **kwargs):
@@ -523,34 +523,20 @@ class template:
             self._wrap.set_nbin(i)
             val=self._wrap.evaluate()
             bin_contents[i]+=np.random.poisson(val)
-        
-        return bin_contents 
+
+        return bin_contents
 
 # the fitter contains a template list and data (toys in the examples)
 # it contains the definition of a nul_pdf and an alternative_pdf to be injected in the definition of the modifier
 # a small plotting interface is implemented to retireve the projected histograms (from the strides) and overlay data
 class fitter:
-    def __init__(self,template_list,nul_params):
+    def __init__(self,template_list):
         self._template_list = template_list
         self._data = np.array([])
-        self._nul_params = nul_params
-    
-    def nul_pdf(self):
-        def func():
-            res = np.zeros(self._template_list[0]._nobs)
-            for temp in self._template_list:
-                res += temp.generate_template(**self._nul_params)
-            return res
-        return func        
 
-    def alt_pdf(self):
-        def func(**kwargs):
-            res = np.zeros(self._template_list[0]._nobs)
-            for temp in self._template_list:
-                res += temp.generate_template(**kwargs)
-            return res
-        return func
-    
+    def get_template(self,index):
+        return self._template_list[index]
+
     def upload_data(self,data):
         self._data = data
 
@@ -563,10 +549,9 @@ class Reader:
         self.name = filename
         with open(filename, 'r') as f:
             self.config = json.load(f)
-        
+
     def createFitter(self, verbose=False):
         template_list = []
-        nul_params = {}
 
         for mode, mode_config in self.config.items():
             hac_list = []
@@ -584,14 +569,6 @@ class Reader:
             injectNP = mode_config["injectNP"]
             _wilsoncoefficients = {}
             for key, value in wilsoncoefficients.items():
-                if key == 'SM':
-                    if key not in nul_params:
-                        nul_params[key] = value[0]
-                else:
-                    if 'Re_'+key not in nul_params:
-                        nul_params['Re_'+key] = value[0]
-                        nul_params['Im_'+key] = value[1]
-            for key, value in wilsoncoefficients.items():
                 _wilsoncoefficients[key] = complex(value[0],value[1])
             if is_hammer_weighted:
                 for fileName in fileNames:
@@ -601,17 +578,10 @@ class Reader:
                     wrapper = HammerNuisWrapper(cacher, **nuisance)
                     temp = template(mode, wrapper)
                     template_list.append(temp)
-                    parameters = formfactors | nuisance
-                    for key, value in parameters.items():
-                        if key not in nul_params:
-                            nul_params[key] = value
                 else:
                     wrapper = HammerNuisWrapperSM(cacher, **nuisance)
                     temp = template(mode, wrapper)
                     template_list.append(temp)
-                    for key, value in parameters.items():
-                        if key not in nul_params:
-                            nul_params[key] = value
             else:
                 for fileName in fileNames:
                     hac_list.append(BackgroundCacher(fileName, histoname))
@@ -619,9 +589,5 @@ class Reader:
                 wrapper = BackgroundNuisWrapper(cacher, **nuisance)
                 temp = template(mode, wrapper)
                 template_list.append(temp)
-                parameters = nuisance
-                for key, value in parameters.items():
-                    if key not in nul_params:
-                        nul_params[key] = value
 
-        return fitter(template_list, nul_params)
+        return fitter(template_list)

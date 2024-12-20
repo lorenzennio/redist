@@ -21,7 +21,7 @@ class TestHammerModifier:
             'h'   :{'inits': (1.,1.), 'bounds': (), 'cov': [[0.5,0.1],[0.1,0.5]], 'paramset_type': 'constrained_by_normal'}
         }
     cmod = modifier_hammer.Modifier_Hammer(new_params, alt_dist, null_dist)
-    
+
     file = dir_path + "/models/simple_model.json"
 
     with open(file, 'r') as f:
@@ -37,7 +37,7 @@ class TestHammerModifier:
                         "expr": "custom_weight_fn",
                     }
               }
-    
+
     model = modifier.add_to_model(model, ['singlechannel'], ['signal'], cmod.expanded_pyhf, custom_mod)
     data = [58., 85.] + model.config.auxdata
 
