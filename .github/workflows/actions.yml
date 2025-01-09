@@ -15,8 +15,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y cmake build-essential  # Install cmake and build tools
           sudo apt-get install libboost-all-dev
-          sudo apt-get install root
-          sudo apt-get install root_base
+          wget https://root.cern/download/root_v6.32.08.Linux-almalinux9.4-x86_64-gcc11.4.tar.gz
+          tar -xzvf root_v6.32.08.Linux-almalinux9.4-x86_64-gcc11.4.tar.gz
+          source root/bin/thisroot.sh
 
       - name: Extract Hammer source
         run: |
