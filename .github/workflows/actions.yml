@@ -31,6 +31,7 @@ jobs:
           cmake -DCMAKE_INSTALL_PREFIX=../Hammer-install -DFORCE_YAMLCPP_INSTALL=ON ../Hammer
           make
           make install
+          ls
           cd pyext
           pip install .
           cd ../..
