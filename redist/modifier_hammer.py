@@ -9,7 +9,6 @@ import pyhf
 from redist.modifier import Modifier
 
 from redist import modifier
-import ROOT
 
 class Modifier_Hammer(Modifier):
     def __init__(self, new_pars, alt_dist, null_dist, name = None, cutoff=None, weight_bound=None, allow_negative_weights=False):
@@ -308,28 +307,16 @@ class BackgroundCacher:
         self._fileName = fileName
         self._histoName = histoName
         self._strides = strides
-
-        file = ROOT.TFile.Open(self._fileName, "READ")
-        if not file or file.IsZombie():
-            print("Error: Could not open file.")
+        try:
+            self._histo = np.loadtxt(self._fileName)
+        except Exception as e:
+            print(f"Error: Could not read file '{self._fileName}'. Exception: {e}")
             return
-
-        hist = file.Get(self._histoName)
-        if not hist:
-            print(f"Error: Histogram '{self._histoName}' not found in file '{self._fileName}'.")
-            file.Close()
+        if len(self._histo) == 0:
+            print(f"Error: Histogram data in file '{self._fileName}' is empty.")
             return
-
-        if not isinstance(hist, ROOT.TH1):
-            print(f"Error: '{self._histoName}' is not a 1D histogram.")
-            file.Close()
-            return
-
-        self._histo = np.array([hist.GetBinContent(bin_idx) for bin_idx in range(1, hist.GetNbinsX() + 1)])
-
-        file.Close()
-        self._nobs=len(self._histo)
-        self._normFactor=self._histo.sum()
+        self._nobs = len(self._histo)
+        self._normFactor = self._histo.sum()
 
     def getHistoElementByPos(self, pos,wcs,FFs):
         return self._histo[pos] / self._normFactor
