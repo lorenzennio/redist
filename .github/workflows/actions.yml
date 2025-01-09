@@ -15,7 +15,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y cmake build-essential  # Install cmake and build tools
           sudo apt-get install libboost-all-dev
-          sudo apt-get install root-system
+          sudo apt-get install root
+          sudo apt-get install root_base
 
       - name: Extract Hammer source
         run: |
