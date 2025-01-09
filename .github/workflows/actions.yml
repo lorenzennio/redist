@@ -20,6 +20,7 @@ jobs:
         run: |
           git clone https://gitlab.com/mpapucci/Hammer.git
           cd Hammer
+          sed -i '62s|set(Hammer_CompileOptions "${Hammer_CompileOptions} -ansi -D_FILE_OFFSET_BITS=64 -Wno-unknown-pragmas")|set(Hammer_CompileOptions "${Hammer_CompileOptions} -D_FILE_OFFSET_BITS=64 -Wno-unknown-pragmas")|' CMakeModules/CompilerChecks.cmake
           git checkout v1.3.0
           cd ..
 
