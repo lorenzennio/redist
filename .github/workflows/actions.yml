@@ -35,7 +35,7 @@ jobs:
           mkdir Hammer-build
           cd Hammer-build
           cmake -DCMAKE_INSTALL_PREFIX=../Hammer-install -DINSTALL_EXTERNAL_DEPENDENCIES=ON -DFORCE_YAMLCPP_INSTALL=ON ../Hammer
-          make
+          make -j4
           make install
           cd pyext
           pip install .
