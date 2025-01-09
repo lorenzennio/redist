@@ -5,7 +5,6 @@ import pyhf
 import json
 from redist import modifier_hammer
 from redist import modifier
-import ROOT
 
 dir_path = os.path.dirname(__file__)
 
@@ -194,7 +193,7 @@ class TestBackgroundCacher:
     def root_file_path(self):
         # Assuming the file and histogram already exist in this location
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        file_path = os.path.join(dir_path, "hammer_file", "test_hammer_file.root")
+        file_path = os.path.join(dir_path, "hammer_file", "test_hammer_file.dat")
         return file_path
 
     def test_valid_histogram(self, root_file_path):
