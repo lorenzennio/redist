@@ -24,6 +24,7 @@ jobs:
 
       - name: Build Hammer
         run: |
+          conda install boost-cpp=1.78.0=h6582d0a_3 -y
           mkdir Hammer-build
           cd Hammer-build
           cmake -DCMAKE_INSTALL_PREFIX=../Hammer-install -DINSTALL_EXTERNAL_DEPENDENCIES=ON ../Hammer
