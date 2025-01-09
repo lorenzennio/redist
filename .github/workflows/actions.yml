@@ -26,7 +26,7 @@ jobs:
           sed -i "213s|HEADER = b'b'|HEADER = 98|" pyext/wrapper/cppdefs.pxd
           sed -i "214s|EVENT = b'e'|EVENT = 101|" pyext/wrapper/cppdefs.pxd
           sed -i "215s|HISTOGRAM = b'h'|HISTOGRAM = 104|" pyext/wrapper/cppdefs.pxd
-          sed -i "216s|RATE = b'n'|RATE = 114|" pyext/wrapper/cppdefs.pxd
+          sed -i "216s|RATE = b'r'|RATE = 114|" pyext/wrapper/cppdefs.pxd
           sed -i "217s|HISTOGRAM_DEFINITION = b'd'|HISTOGRAM_DEFINITION = 100|" pyext/wrapper/cppdefs.pxd
           cd ..
 
