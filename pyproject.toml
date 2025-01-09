@@ -35,9 +35,7 @@ dependencies = [
     "corner",
     "pathlib",
     "pre-commit",
-    "anyio",
-    "root",
-    "root_base"
+    "anyio"
 ]
 
 classifiers = [
