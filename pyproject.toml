@@ -33,9 +33,8 @@ dependencies = [
     "jinja2",
     "ipykernel",
     "corner",
-    "pathlib",
     "pre-commit",
-    "anyio"
+    "pyroot"
 ]
 
 classifiers = [
