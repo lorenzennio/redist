@@ -31,7 +31,9 @@ jobs:
           cmake -DCMAKE_INSTALL_PREFIX=../Hammer-install -DFORCE_YAMLCPP_INSTALL=ON ../Hammer
           make
           make install
+          cd pyext
           pip install .
+          cd ../..
 
       - name: Verify Hammer build
         run: |
