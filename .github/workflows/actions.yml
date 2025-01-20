@@ -20,14 +20,8 @@ jobs:
         run: |
           git clone https://gitlab.com/mpapucci/Hammer.git
           cd Hammer
-          git checkout v1.3.0
+          git checkout v1.4.1
           sed -i '62s|set(Hammer_CompileOptions "${Hammer_CompileOptions} -ansi -D_FILE_OFFSET_BITS=64 -Wno-unknown-pragmas")|set(Hammer_CompileOptions "${Hammer_CompileOptions} -D_FILE_OFFSET_BITS=64 -Wno-unknown-pragmas")|' CMakeModules/CompilerChecks.cmake
-          sed -i "212s|UNDEFINED = b'u'|UNDEFINED = 117|" pyext/wrapper/cppdefs.pxd
-          sed -i "213s|HEADER = b'b'|HEADER = 98|" pyext/wrapper/cppdefs.pxd
-          sed -i "214s|EVENT = b'e'|EVENT = 101|" pyext/wrapper/cppdefs.pxd
-          sed -i "215s|HISTOGRAM = b'h'|HISTOGRAM = 104|" pyext/wrapper/cppdefs.pxd
-          sed -i "216s|RATE = b'r'|RATE = 114|" pyext/wrapper/cppdefs.pxd
-          sed -i "217s|HISTOGRAM_DEFINITION = b'd'|HISTOGRAM_DEFINITION = 100|" pyext/wrapper/cppdefs.pxd
           cd ..
 
       - name: Build Hammer
