@@ -555,11 +555,14 @@ class Reader:
             nuisance = mode_config["nuisance"]
             is_hammer_weighted = mode_config["ishammerweighted"]
             injectNP = mode_config["injectNP"]
+            strides = mode_config["strides"]
             _wilsoncoefficients = {}
             for key, value in wilsoncoefficients.items():
                 _wilsoncoefficients[key] = complex(value[0],value[1])
             if is_hammer_weighted:
                 for fileName in fileNames:
+                    if verbose:
+                        print(f"Reading {fileName}")
                     hac_list.append(HammerCacher(fileName, histoname, ffscheme, wcscheme, formfactors, _wilsoncoefficients, scalefactor))
                 cacher = MultiHammerCacher(hac_list)
                 if injectNP:
@@ -572,7 +575,9 @@ class Reader:
                     template_list.append(temp)
             else:
                 for fileName in fileNames:
-                    hac_list.append(BackgroundCacher(fileName, histoname))
+                    if verbose:
+                        print(f"Reading {fileName}")
+                    hac_list.append(BackgroundCacher(fileName, histoname,strides))
                 cacher = hac_list[0]
                 wrapper = BackgroundNuisWrapper(cacher, **nuisance)
                 temp = template(mode, wrapper)
