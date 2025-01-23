@@ -39,6 +39,7 @@
       "q2 [GeV^2/c^4]",
       "FS Lepton Energy [GeV]"
     ],
+    "strides": [1,8,32],
     "binning": [[-2.0, 10.0], [-0.4, 12.6], [0.0, 2.0]]
   },
   "B2DstMuNu": {
@@ -81,6 +82,7 @@
       "q2 [GeV^2/c^4]",
       "FS Lepton Energy [GeV]"
     ],
+    "strides": [1,8,32],
     "binning": [[-2.0, 10.0], [-0.4, 12.6], [0.0, 2.0]]
   }
 }
