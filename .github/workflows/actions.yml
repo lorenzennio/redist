@@ -5,7 +5,7 @@ on: [push]
 jobs:
   tests:
     runs-on: ubuntu-latest
-    container: python:3.10 # optional
+    #container: python:3.10 # optional
 
     steps:
       - uses: actions/checkout@v4
