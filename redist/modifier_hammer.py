@@ -270,13 +270,14 @@ class HammerCacher:
 # that can be very time consuming
 class MultiHammerCacher:
     def __init__(self, cacherList):
+        cacher0 = cacherList[0]
         self._cacherList = []
         self._normFactor = 0
-        self._scaleFactor = cacherList[0]._scaleFactor
-        self._nobs = cacherList[0]._nobs
-        self._strides = cacherList[0]._strides
-        self._wcs = cacherList[0]._wcs
-        self._FFs = cacherList[0]._FFs
+        self._scaleFactor = cacher0._scaleFactor
+        self._nobs = cacher0._nobs
+        self._strides = cacher0._strides
+        self._wcs = cacher0._wcs
+        self._FFs = cacher0._FFs
         for cacher in cacherList:
             self._cacherList.append(cacher)
             self._normFactor += cacher.getHistoTotalSM()
@@ -285,8 +286,8 @@ class MultiHammerCacher:
         res = 0
         for i in range(len(self._cacherList)):
             res += self._cacherList[i].getHistoElementByPosNoScale(pos,wcs,FFs)
-            self._wcs = wcs
-            self._FFs = FFs
+        self._wcs = wcs
+        self._FFs = FFs
         return res * self._scaleFactor / self._normFactor
 
     def getHistoElementByPosSM(self, pos, wcs, FFs):
@@ -296,8 +297,8 @@ class MultiHammerCacher:
                 wcs[key] = 0.
         for i in range(len(self._cacherList)):
             res += self._cacherList[i].getHistoElementByPosNoScale(pos,wcs,FFs)
-            self._wcs = wcs
-            self._FFs = FFs
+        self._wcs = wcs
+        self._FFs = FFs
         return res * self._scaleFactor / self._normFactor
 
 # the background cacher access not hammer reweighted histograms and gives us in a format
@@ -563,7 +564,7 @@ class Reader:
                 for fileName in fileNames:
                     if verbose:
                         print(f"Reading {fileName}")
-                    hac_list.append(HammerCacher(fileName, histoname, ffscheme, wcscheme, formfactors, _wilsoncoefficients, scalefactor))
+                    hac_list.append(HammerCacher(fileName, histoname, ffscheme, wcscheme, deepcopy(formfactors), deepcopy(_wilsoncoefficients), deepcopy(scalefactor)))
                 cacher = MultiHammerCacher(hac_list)
                 if injectNP:
                     wrapper = HammerNuisWrapper(cacher, **nuisance)
@@ -579,7 +580,7 @@ class Reader:
                         print(f"Reading {fileName}")
                     hac_list.append(BackgroundCacher(fileName, histoname,strides))
                 cacher = hac_list[0]
-                wrapper = BackgroundNuisWrapper(cacher, **nuisance)
+                wrapper = BackgroundNuisWrapper(cacher,**nuisance)
                 temp = template(mode, wrapper)
                 template_list.append(temp)
 
