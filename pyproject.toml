@@ -1,0 +1,72 @@
+[build-system]
+requires = [
+    "hatchling>=1.13.0",
+    "hatch-vcs>=0.3.0",
+]
+build-backend = "hatchling.build"
+
+[project]
+name = "redist"
+dynamic = ["version"]
+description = "Package for reinterpretation of particle physics results"
+readme = "README.md"
+license = { text = "MIT" }  # SPDX short identifier
+authors = [
+  { name = "Lorenz Gaertner", email = "lorenz.gaertner@gmail.com" },
+]
+maintainers = [
+  { name = "Lorenz Gaertner", email = "lorenz.gaertner@gmail.com" },
+]
+requires-python = ">=3.8"
+
+dependencies = [
+    "pip>=23.0",
+    "eoshep>=1.0.11",
+    "dynesty==2.0.3",
+    "jsonschema",
+    "pyhf",
+    "bayesian_pyhf @ git+https://github.com/malin-horstmann/bayesian_pyhf.git",
+    "requests",
+    "numexpr",
+    "iminuit",
+    "pytest",
+    "jinja2",
+    "ipykernel",
+    "corner",
+    "pre-commit",
+]
+
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Scientific/Engineering :: Physics",
+]
+
+[project.urls]
+Homepage = "https://github.com/lorenzennio/redist"
+Documentation = "https://github.com/lorenzennio/redist"
+"Issue Tracker" = "https://github.com/lorenzennio/redist/issues"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.version.raw-options]
+local_scheme = "no-local-version"
+
+[tool.hatch.build.targets.sdist]
+# hatchling always includes:
+# pyproject.toml, .gitignore, any README, any LICENSE, AUTHORS
+only-include = [
+    "/redist",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["redist"]
