@@ -52,5 +52,8 @@ jobs:
       - name: Run pre-commit
         run: pre-commit run --all-files
 
+      - name: Upgrade pytest and dependencies
+        run: pip install --upgrade pytest pytest-cache
+
       - name: Run tests with pytest
         run: pytest
