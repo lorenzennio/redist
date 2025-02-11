@@ -6,6 +6,9 @@
 #*.npy
 # *.pkl
 
+#results
+*/results/
+
 #cache
 */__pycache__/
 *.pyc
