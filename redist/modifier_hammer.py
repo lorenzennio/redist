@@ -341,7 +341,15 @@ class HammerNuisWrapper:
         self._dim = len(hac._strides)
 
     def set_wcs(self,wcs):
-        self._wcs = {"SM":wcs[list(wcs.keys())[0]],"S_qLlL": complex(wcs[list(wcs.keys())[1]], wcs[list(wcs.keys())[2]]),"S_qRlL": complex(wcs[list(wcs.keys())[3]], wcs[list(wcs.keys())[4]]),"V_qLlL": complex(wcs[list(wcs.keys())[5]], wcs[list(wcs.keys())[6]]),"V_qRlL": complex(wcs[list(wcs.keys())[7]], wcs[list(wcs.keys())[8]]),"T_qLlL": complex(wcs[list(wcs.keys())[9]], wcs[list(wcs.keys())[10]])}
+        self._wcs = {}
+        for key in wcs.keys():
+            if key.startswith("Re_"):
+                base_name = key[3:]  # Remove "Re_" prefix
+                im_key = "Im_" + base_name
+                if im_key in wcs:  # Ensure both Re_ and Im_ exist
+                    self._wcs[base_name] = complex(wcs[key], wcs[im_key])
+            elif not key.startswith("Im_"):  # Avoid adding "Im_" keys separately
+                self._wcs[key] = wcs[key]
 
     def set_FFs(self,FFs):
         FFs_temp = {}
@@ -385,12 +393,15 @@ class HammerNuisWrapperSM:
         self._dim = len(hac._strides)
 
     def set_wcs(self,wcs):
-        #for key in self._wcs.keys():
-        #    if key == 'SM':
-        #        self._wcs[key] = wcs[key]
-        #    else:
-        #        self._wcs[key] = complex(wcs['Re_'+key],wcs['Im_'+key])
-        self._wcs = {"SM":wcs[list(wcs.keys())[0]],"S_qLlL": complex(wcs[list(wcs.keys())[1]], wcs[list(wcs.keys())[2]]),"S_qRlL": complex(wcs[list(wcs.keys())[3]], wcs[list(wcs.keys())[4]]),"V_qLlL": complex(wcs[list(wcs.keys())[5]], wcs[list(wcs.keys())[6]]),"V_qRlL": complex(wcs[list(wcs.keys())[7]], wcs[list(wcs.keys())[8]]),"T_qLlL": complex(wcs[list(wcs.keys())[9]], wcs[list(wcs.keys())[10]])}
+        self._wcs = {}
+        for key in wcs.keys():
+            if key.startswith("Re_"):
+                base_name = key[3:]  # Remove "Re_" prefix
+                im_key = "Im_" + base_name
+                if im_key in wcs:  # Ensure both Re_ and Im_ exist
+                    self._wcs[base_name] = complex(wcs[key], wcs[im_key])
+            elif not key.startswith("Im_"):  # Avoid adding "Im_" keys separately
+                self._wcs[key] = wcs[key]
 
     def set_FFs(self,FFs):
         FFs_temp = {}

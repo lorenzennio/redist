@@ -261,11 +261,11 @@ class TestHammerNuisWrapper:
         # Act
         new_wcs = {
             'SM': 1.0,
-            'S_qLlL': 1.0, 'S_qLlL_im': 2.0,
-            'S_qRlL': 1.0, 'S_qRlL_im': 2.0,
-            'V_qLlL': 1.0, 'V_qLlL_im': 2.0,
-            'V_qRlL': 1.0, 'V_qRlL_im': 2.0,
-            'T_qLlL': 1.0, 'T_qLlL_im': 2.0
+            'Re_S_qLlL': 1.0, 'Im_S_qLlL': 2.0,
+            'Re_S_qRlL': 1.0, 'Im_S_qRlL': 2.0,
+            'Re_V_qLlL': 1.0, 'Im_V_qLlL': 2.0,
+            'Re_V_qRlL': 1.0, 'Im_V_qRlL': 2.0,
+            'Re_T_qLlL': 1.0, 'Im_T_qLlL': 2.0
         }
         wrapper.set_wcs(new_wcs)
 
@@ -317,11 +317,11 @@ class TestHammerNuisWrapper:
         wrapper.set_nbin(1)
         wrapper.set_wcs({
             'SM': 1.0,
-            'S_qLlL': 1.0, 'S_qLlL_im': 0.5,
-            'S_qRlL': 1.0, 'S_qRlL_im': 0.5,
-            'V_qLlL': 1.0, 'V_qLlL_im': 0.5,
-            'V_qRlL': 1.0, 'V_qRlL_im': 0.5,
-            'T_qLlL': 1.0, 'T_qLlL_im': 0.5
+            'Re_S_qLlL': 1.0, 'Im_S_qLlL': 0.5,
+            'Re_S_qRlL': 1.0, 'Im_S_qRlL': 0.5,
+            'Re_V_qLlL': 1.0, 'Im_V_qLlL': 0.5,
+            'Re_V_qRlL': 1.0, 'Im_V_qRlL': 0.5,
+            'Re_T_qLlL': 1.0, 'Im_T_qLlL': 0.5
         })
         wrapper.set_FFs({'FF1': 1.0, 'FF2': 2.0})
 
@@ -373,11 +373,11 @@ class TestHammerNuisWrapperSM:
         # Act
         new_wcs = {
             'SM': 1.0,
-            'S_qLlL': 1.0, 'S_qLlL_im': 0.5,
-            'S_qRlL': 1.0, 'S_qRlL_im': 0.5,
-            'V_qLlL': 1.0, 'V_qLlL_im': 0.5,
-            'V_qRlL': 1.0, 'V_qRlL_im': 0.5,
-            'T_qLlL': 1.0, 'T_qLlL_im': 0.5
+            'Re_S_qLlL': 1.0, 'Im_S_qLlL': 0.5,
+            'Re_S_qRlL': 1.0, 'Im_S_qRlL': 0.5,
+            'Re_V_qLlL': 1.0, 'Im_V_qLlL': 0.5,
+            'Re_V_qRlL': 1.0, 'Im_V_qRlL': 0.5,
+            'Re_T_qLlL': 1.0, 'Im_T_qLlL': 0.5
         }
         wrapper.set_wcs(new_wcs)
 
