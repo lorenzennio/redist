@@ -56,4 +56,4 @@ jobs:
         run: pip install --upgrade pytest pytest-cache pathlib
 
       - name: Run tests with pytest
-        run: pytest
+        run: pytest ./test
