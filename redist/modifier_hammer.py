@@ -202,7 +202,7 @@ class HammerCacher:
             self._strides = [c * dim for c in self._strides]
             self._strides.append(1)
 
-        self._normFactor = self.getHistoTotalSM()
+        self._normFactor = self.getHistoTotal()
 
     def checkWCCache(self, wcs):
         isCached = True
@@ -241,15 +241,23 @@ class HammerCacher:
             total += self._histo[ni].sum_wi
         return total
 
+    def getHistoTotal(self):
+        total = 0
+        for ni in range(self._nobs):
+            total += self._histo[ni].sum_wi
+        return total
+
     def getHistoElementByPosNoScale(self, pos, wcs, FFs):
         if not self.checkFFCache(FFs):
             self._ham.reset_ff_eigenvectors(self._FFScheme["Process"], self._FFScheme["SchemeVar"])
             self._ham.set_ff_eigenvectors(self._FFScheme["Process"], self._FFScheme["SchemeVar"], FFs)
             self._histo = self._ham.get_histogram(self._histoName, self._FFScheme["name"])
+#            self._normFactor = self.getHistoTotal()
         if not self.checkWCCache(wcs):
             self._ham.reset_wilson_coefficients(self._WilsonSet)
             self._ham.set_wilson_coefficients(self._WilsonSet, wcs)
             self._histo = self._ham.get_histogram(self._histoName, self._FFScheme["name"])
+#            self._normFactor = self.getHistoTotal()
         return self._histo[pos].sum_wi
 
     def getHistoElementByPosNoScaleSM(self, pos, wcs, FFs):
@@ -259,10 +267,12 @@ class HammerCacher:
         if not self.checkFFCache(FFs):
             self._ham.set_ff_eigenvectors(self._FFScheme["Process"], self._FFScheme["SchemeVar"], FFs)
             self._histo = self._ham.get_histogram(self._histoName, self._FFScheme["name"])
+#            self._normFactor = self.getHistoTotal()
         if not self.checkWCCache(wcs):
             self._ham.reset_wilson_coefficients(self._WilsonSet)
             self._ham.set_wilson_coefficients(self._WilsonSet, wcs)
             self._histo = self._ham.get_histogram(self._histoName, self._FFScheme["name"])
+#            self._normFactor = self.getHistoTotal()
         return self._histo[pos].sum_wi
 
 # Multi hammer cacher allows you to store multiple histograms in multiple files
@@ -280,7 +290,7 @@ class MultiHammerCacher:
         self._FFs = cacher0._FFs
         for cacher in cacherList:
             self._cacherList.append(cacher)
-            self._normFactor += cacher.getHistoTotalSM()
+            self._normFactor += cacher.getHistoTotal()
 
     def getHistoElementByPos(self, pos, wcs, FFs):
         res = 0
@@ -288,6 +298,9 @@ class MultiHammerCacher:
             res += self._cacherList[i].getHistoElementByPosNoScale(pos,wcs,FFs)
         self._wcs = wcs
         self._FFs = FFs
+#        self._normFactor = 0
+#        for cacher in self._cacherList:
+#            self._normFactor += cacher._normFactor
         return res * self._scaleFactor / self._normFactor
 
     def getHistoElementByPosSM(self, pos, wcs, FFs):
@@ -299,6 +312,9 @@ class MultiHammerCacher:
             res += self._cacherList[i].getHistoElementByPosNoScale(pos,wcs,FFs)
         self._wcs = wcs
         self._FFs = FFs
+#        self._normFactor = 0
+#        for cacher in self._cacherList:
+#            self._normFactor += cacher._normFactor
         return res * self._scaleFactor / self._normFactor
 
 # the background cacher access not hammer reweighted histograms and gives us in a format
