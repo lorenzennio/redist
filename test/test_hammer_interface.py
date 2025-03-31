@@ -136,6 +136,9 @@ class TestMultiHammerCacher:
         def getHistoElementByPosNoScale(self, pos, wcs, FFs):
             return self.element_values[pos]
 
+        def getHistoTotal(self):
+            return self._normFactor
+
         def getHistoTotalSM(self):
             return self._normFactor
 
