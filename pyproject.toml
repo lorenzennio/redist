@@ -48,6 +48,7 @@ classifiers = [
 dev = [
     "pre-commit",
     "pytest",
+    "uv",
 ]
 eos = [
     "eoshep>=1.0.11",
