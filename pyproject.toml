@@ -58,3 +58,6 @@ bayesian = [
 Homepage = "https://github.com/lorenzennio/redist"
 Documentation = "https://github.com/lorenzennio/redist"
 "Issue Tracker" = "https://github.com/lorenzennio/redist/issues"
+
+[tool.ruff]
+exclude = ['examples']
