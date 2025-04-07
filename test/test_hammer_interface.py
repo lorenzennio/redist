@@ -1,10 +1,7 @@
 import os
 import pytest
 import numpy as np
-import pyhf
-import json
 from redist import modifier_hammer
-from redist import modifier
 
 dir_path = os.path.dirname(__file__)
 
