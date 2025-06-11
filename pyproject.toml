@@ -68,5 +68,8 @@ build-backend = "hatchling.build"
 [tool.hatch.version]
 source = "vcs"
 
+[tool.hatch.build.hooks.vcs]
+version-file = "redist/_version.py"
+
 [tool.hatch.metadata]
 allow-direct-references = true
