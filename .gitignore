@@ -16,3 +16,6 @@
 .pytest_cache/
 
 *.egg-info/
+
+#builds
+dist/*
