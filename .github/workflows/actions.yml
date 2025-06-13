@@ -4,15 +4,21 @@ on: [push, pull_request]
 
 jobs:
   tests:
+<<<<<<< HEAD
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+=======
+    runs-on: ubuntu-22.04
+    #container: python:3.10 # optional
+>>>>>>> d548d0023030b09b3854902dfad7e6b02d4dbf27
 
     steps:
       - uses: actions/checkout@v4
 
+<<<<<<< HEAD
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
@@ -30,6 +36,43 @@ jobs:
         run: |
           python -m pip install uv
           uv pip install --system --upgrade -e ".[dev]"
+=======
+      - name: Install prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential  # Install cmake and build tools
+          sudo apt-get install libboost-all-dev
+
+      - name: Extract Hammer source
+        run: |
+          git clone https://gitlab.com/mpapucci/Hammer.git
+          cd Hammer
+          git checkout v1.3.0
+          sed -i '62s|set(Hammer_CompileOptions "${Hammer_CompileOptions} -ansi -D_FILE_OFFSET_BITS=64 -Wno-unknown-pragmas")|set(Hammer_CompileOptions "${Hammer_CompileOptions} -D_FILE_OFFSET_BITS=64 -Wno-unknown-pragmas")|' CMakeModules/CompilerChecks.cmake
+          sed -i "212s|UNDEFINED = b'u'|UNDEFINED = 117|" pyext/wrapper/cppdefs.pxd
+          sed -i "213s|HEADER = b'b'|HEADER = 98|" pyext/wrapper/cppdefs.pxd
+          sed -i "214s|EVENT = b'e'|EVENT = 101|" pyext/wrapper/cppdefs.pxd
+          sed -i "215s|HISTOGRAM = b'h'|HISTOGRAM = 104|" pyext/wrapper/cppdefs.pxd
+          sed -i "216s|RATE = b'r'|RATE = 114|" pyext/wrapper/cppdefs.pxd
+          sed -i "217s|HISTOGRAM_DEFINITION = b'd'|HISTOGRAM_DEFINITION = 100|" pyext/wrapper/cppdefs.pxd
+          cd ..
+
+      - name: Build Hammer
+        run: |
+          mkdir Hammer-build
+          cd Hammer-build
+          cmake -DCMAKE_INSTALL_PREFIX=../Hammer-install -DWITH_PYTHON=ON -DINSTALL_EXTERNAL_DEPENDENCIES=ON -DFORCE_YAMLCPP_INSTALL=ON ../Hammer
+          make -j4
+          make install
+          cd pyext
+          pip install .
+          cd ../..
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip wheel setuptools packaging
+          python -m pip install -e .
+>>>>>>> d548d0023030b09b3854902dfad7e6b02d4dbf27
 
       - name: Show installed packages
         run: pip list
@@ -37,5 +80,13 @@ jobs:
       - name: Run pre-commit checks
         run: pre-commit run --all-files
 
+<<<<<<< HEAD
       - name: Run tests
         run: pytest
+=======
+      - name: Upgrade pytest and dependencies
+        run: pip install --upgrade pytest pytest-cache
+
+      - name: Run tests with pytest
+        run: pytest ./test
+>>>>>>> d548d0023030b09b3854902dfad7e6b02d4dbf27

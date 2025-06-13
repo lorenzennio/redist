@@ -1,0 +1,88 @@
+{
+  "B2DstTauNu": {
+    "fileNames": ["templates/B02DstTauNu_TauMu_hammer.dat"],
+    "histoname": "mmiss2_q2_el",
+    "ffscheme": {
+      "name":"SchemeBLPRXP",
+      "Process":"BtoD*",
+      "SchemeVar":"BLPRXPVar"
+    },
+    "wcscheme": "BtoCTauNu",
+    "scalefactor": 10000.0,
+    "formfactors": {
+      "delta_RhoSq": 0.0,
+      "delta_cSt": 0.0,
+      "delta_chi21": 0.0,
+      "delta_chi2p": 0.0,
+      "delta_chi3p": 0.0,
+      "delta_eta1": 0.0,
+      "delta_etap": 0.0,
+      "delta_phi1p": 0.0,
+      "delta_beta21": 0.0,
+      "delta_beta3p": 0.0
+    },
+    "wilsoncoefficients": {
+      "SM": [1.0,0.0],
+      "S_qLlL": [0.0,0.0],
+      "S_qRlL": [0.0,0.0],
+      "V_qLlL": [0.0,0.0],
+      "V_qRlL": [0.0,0.0],
+      "T_qLlL": [0.0,0.0]
+    },
+    "nuisance": {
+      "lumi": 1.0
+    },
+    "ishammerweighted": true,
+    "injectNP":true,
+    "axistitles": [
+      "mmiss2 [GeV^2/c^4]",
+      "q2 [GeV^2/c^4]",
+      "FS Lepton Energy [GeV]"
+    ],
+    "strides": [1,8,32],
+    "binning": [[-2.0, 10.0], [-0.4, 12.6], [0.0, 2.0]]
+  },
+  "B2DstMuNu": {
+    "fileNames": ["templates/B02DstMuNu_hammer.dat"],
+    "histoname": "mmiss2_q2_el",
+    "ffscheme": {
+      "name":"SchemeBLPRXP",
+      "Process":"BtoD*",
+      "SchemeVar":"BLPRXPVar"
+    },
+    "wcscheme": "BtoCMuNu",
+    "scalefactor": 100000.0,
+    "formfactors": {
+      "delta_RhoSq": 0.0,
+      "delta_cSt": 0.0,
+      "delta_chi21": 0.0,
+      "delta_chi2p": 0.0,
+      "delta_chi3p": 0.0,
+      "delta_eta1": 0.0,
+      "delta_etap": 0.0,
+      "delta_phi1p": 0.0,
+      "delta_beta21": 0.0,
+      "delta_beta3p": 0.0
+    },
+    "wilsoncoefficients": {
+      "SM": [1.0,0.0],
+      "S_qLlL": [0.0,0.0],
+      "S_qRlL": [0.0,0.0],
+      "V_qLlL": [0.0,0.0],
+      "V_qRlL": [0.0,0.0],
+      "T_qLlL": [0.0,0.0]
+    },
+    "nuisance": {
+      "lumi": 1.0
+    },
+    "ishammerweighted": true,
+    "injectNP":false,
+    "axistitles": [
+      "mmiss2 [GeV^2/c^4]",
+      "q2 [GeV^2/c^4]",
+      "FS Lepton Energy [GeV]"
+    ],
+    "strides": [1,8,32],
+    "binning": [[-2.0, 10.0], [-0.4, 12.6], [0.0, 2.0]]
+  }
+}
