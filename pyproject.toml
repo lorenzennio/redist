@@ -3,7 +3,7 @@ name = "redist"
 dynamic = ["version"]
 description = "Package for reinterpretation of particle physics results"
 readme = "README.md"
-license = { text = "MIT" }  # SPDX short identifier
+license = "MIT"
 authors = [
   { name = "Lorenz Gaertner", email = "lorenz.gaertner@gmail.com" },
 ]
