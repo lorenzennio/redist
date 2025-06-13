@@ -60,3 +60,6 @@ Documentation = "https://github.com/lorenzennio/redist"
 
 [tool.ruff]
 exclude = ['examples']
+
+[tool.setuptools.packages.find]
+include = ["redist*"]
