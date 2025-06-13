@@ -1,42 +1,15 @@
-name: CI
+name: Tests
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
   tests:
-<<<<<<< HEAD
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
-=======
     runs-on: ubuntu-22.04
     #container: python:3.10 # optional
->>>>>>> d548d0023030b09b3854902dfad7e6b02d4dbf27
 
     steps:
       - uses: actions/checkout@v4
 
-<<<<<<< HEAD
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Cache pip
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml', '**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-${{ matrix.python-version }}-
-
-      - name: Install dependencies
-        run: |
-          python -m pip install uv
-          uv pip install --system --upgrade -e ".[dev]"
-=======
       - name: Install prerequisites
         run: |
           sudo apt-get update
@@ -72,21 +45,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip wheel setuptools packaging
           python -m pip install -e .
->>>>>>> d548d0023030b09b3854902dfad7e6b02d4dbf27
 
-      - name: Show installed packages
-        run: pip list
+      - name: List installed Python packages
+        run: python -m pip list
 
-      - name: Run pre-commit checks
+      - name: Run pre-commit
         run: pre-commit run --all-files
 
-<<<<<<< HEAD
-      - name: Run tests
-        run: pytest
-=======
       - name: Upgrade pytest and dependencies
         run: pip install --upgrade pytest pytest-cache
 
       - name: Run tests with pytest
         run: pytest ./test
->>>>>>> d548d0023030b09b3854902dfad7e6b02d4dbf27
