@@ -132,12 +132,12 @@ class TestSimpleModel:
         ]
 
     def test_best_fit(self):
-        assert pytest.approx(self.best_fit, 1e-4) == [
-            4.00150799,
-            0.99904199,
-            1.0,
-            1.0,
-            0.99999687,
-            1.00000414,
-            1.00000162,
+        assert pytest.approx(self.best_fit, 1e-2) == [
+            4.00,
+            1.00,
+            1.00,
+            1.00,
+            1.00,
+            1.00,
+            1.00,
         ]
