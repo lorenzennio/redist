@@ -1,5 +1,5 @@
 [project]
-name = "redist"
+name = "redistpy"
 dynamic = ["version"]
 description = "Package for reinterpretation of particle physics results"
 readme = "README.md"
