@@ -16,6 +16,20 @@ This is the implementation of a reweighing method for the reinterpretation of bi
 ## Dependencies
 This implementation is based on the [pyhf](https://github.com/scikit-hep/pyhf) software for statistical inference. The [examples](examples) use the [EOS](https://github.com/eos/eos) software to calculate theoretical predictions.
 
+### Bayesian inference (optional)
+If you want to perform Bayesian inference with `redist` (or `pyhf`) you'll need to install `bayesian_pyhf`. 
+
+You can do so with::
+```bash
+pip install git+https://github.com/malin-horstmann/bayesian_pyhf.git
+```
+
+For visualization of the posterior distribution, `corner` is very useful:
+
+```bash
+pip install corner
+```
+
 ## Installation
 
 ```bash

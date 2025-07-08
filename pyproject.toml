@@ -48,10 +48,6 @@ eos = [
     "eoshep>=1.0.11",
     "dynesty==2.0.3",
 ]
-bayesian = [
-  "bayesian_pyhf @ git+https://github.com/malin-horstmann/bayesian_pyhf.git",
-  "corner",
-]
 
 [project.urls]
 Homepage = "https://github.com/lorenzennio/redist"
@@ -70,6 +66,3 @@ source = "vcs"
 
 [tool.hatch.build.hooks.vcs]
 version-file = "redist/_version.py"
-
-[tool.hatch.metadata]
-allow-direct-references = true
