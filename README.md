@@ -13,6 +13,25 @@ This is the implementation of a reweighing method for the reinterpretation of bi
 
 **Check out the paper [here](https://arxiv.org/pdf/2402.08417.pdf).**
 
+## Installation
+
+You can install `redist` from `pypi`
+
+```bash
+pip install redistpy
+```
+
+### Manual installation
+
+You can install manually with
+```bash
+# Clone this repository
+git clone https://github.com/lorenzennio/redist.git
+
+# Install
+pip install -e redist
+```
+
 ## Dependencies
 This implementation is based on the [pyhf](https://github.com/scikit-hep/pyhf) software for statistical inference. The [examples](examples) use the [EOS](https://github.com/eos/eos) software to calculate theoretical predictions.
 
@@ -28,23 +47,6 @@ For visualization of the posterior distribution, `corner` is very useful:
 
 ```bash
 pip install corner
-```
-
-## Installation
-
-You can install `redist` from `pypi`
-
-```bash
-pip install redistpy
-```
-
-Or install manually with
-```bash
-# Clone this repository
-git clone https://github.com/lorenzennio/redist.git
-
-# Install
-pip install -e redist
 ```
 
 ## Contact
