@@ -467,19 +467,19 @@ def _read_pars(json_input):
     return new_pars
 
 
-def map(target_samples, kinematic_samples, target_bins, kinematic_bins):
+def map(target_samples, kinematic_samples, target_bins, kinematic_bins, weights=None):
     """
     Generate mapping distribution from samples.
-
     Args:
         target_samples (array): Target (fitting variable) samples.
         kinematic_samples (array): Kinematic samples.
         target_bins (array): Target (fitting variable) binning.
         kinematic_bins (array): Kinematic binning.
+        weights (array, optional): Weights for individual samples.
     """
     samples = [target_samples] + list(kinematic_samples)
     binning = [target_bins] + list(kinematic_bins)
-    return np.histogramdd(samples, bins=binning)[0]
+    return np.histogramdd(samples, bins=binning, weights=weights)[0]
 
 
 def _flatten(xs):
