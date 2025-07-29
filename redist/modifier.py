@@ -469,6 +469,7 @@ def _read_pars(json_input):
 
 def map(target_samples, kinematic_samples, target_bins, kinematic_bins):
     """
+    weights (array, optional): Weights for individual samples.
     Generate mapping distribution from samples.
 
     Args:
