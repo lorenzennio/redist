@@ -479,10 +479,7 @@ def map(target_samples, kinematic_samples, target_bins, kinematic_bins, weights=
     """
     samples = [target_samples] + list(kinematic_samples)
     binning = [target_bins] + list(kinematic_bins)
-    if weights is not None:
-        return np.histogramdd(samples, bins=binning, weights=weights)[0]
-    else:
-        return np.histogramdd(samples, bins=binning)[0]
+    return np.histogramdd(samples, bins=binning, weights=weights)[0]
 
 
 def _flatten(xs):
