@@ -1,9 +1,9 @@
 [project]
-name = "redist"
+name = "redistpy"
 dynamic = ["version"]
 description = "Package for reinterpretation of particle physics results"
 readme = "README.md"
-license = "MIT"
+license = { text = "MIT" }  # SPDX short identifier
 authors = [
   { name = "Lorenz Gaertner", email = "lorenz.gaertner@gmail.com" },
 ]
@@ -13,7 +13,6 @@ maintainers = [
 requires-python = ">=3.8"
 
 dependencies = [
-    "pip>=25.0",
     "jsonschema",
     "matplotlib",
     "numpy",
@@ -28,6 +27,7 @@ dependencies = [
 
 classifiers = [
   "Development Status :: 4 - Beta",
+  "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
@@ -48,10 +48,6 @@ eos = [
     "eoshep>=1.0.11",
     "dynesty==2.0.3",
 ]
-bayesian = [
-  "bayesian_pyhf @ git+https://github.com/malin-horstmann/bayesian_pyhf.git",
-  "corner",
-]
 
 [project.urls]
 Homepage = "https://github.com/lorenzennio/redist"
@@ -61,5 +57,15 @@ Documentation = "https://github.com/lorenzennio/redist"
 [tool.ruff]
 exclude = ['examples']
 
-[tool.setuptools.packages.find]
-include = ["redist*"]
+[build-system]
+requires = ["hatchling >= 1.26", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+packages = ["redist"]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "redist/_version.py"
