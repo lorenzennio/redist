@@ -58,7 +58,7 @@ def _dists1d(cmod, alt_pars, lims, labels, plot_dists, plot_weights, axis):
         # axdist.plot(x, cmod.alt_dist(x, *alt_pars), 'C2', label='alternative')
 
         axdist.stairs(null, cmod.bins[0], label="null", color="C0", linewidth=1.5)
-        axdist.stairs(alt, cmod.bins[0], label="alt.", color="C1", linewidth=1.5)
+        axdist.stairs(alt, cmod.bins[0], label="alt.", color="C2", linewidth=1.5)
         axdist.legend()
 
         if labels:
