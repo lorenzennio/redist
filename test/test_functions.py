@@ -190,6 +190,81 @@ class TestDegenerateNull:
         assert "[1, 2] x [-1, 1]" in str(excinfo.value)
 
 
+class TestWeightBound:
+    """Every bound is applied, including zero and negative ones.
+
+    The bound used to be tested for truth rather than for presence, so a bound
+    of zero was accepted and then silently ignored. Zero and below are ordinary
+    bounds once `allow_negative_weights` puts weights on both sides of them.
+    """
+
+    pars = {
+        "a": {
+            "inits": (1.0,),
+            "bounds": ((0.0, 10.0),),
+            "paramset_type": "unconstrained",
+        }
+    }
+    bins = [np.array([2.0, 3.0, 5.0, 6.0])]
+    mapping = np.array([[2.0, 2.0, 1.0], [2.0, 6.0, 2.0]])
+
+    @staticmethod
+    def _null(x, a=10.0):
+        return a
+
+    @staticmethod
+    def _alt(x, a=1.0):
+        return a * (1 + x)
+
+    @staticmethod
+    def _falling(x, a=1.0):
+        """Weights of both signs: [0.025, -0.02, -0.065] over these bins."""
+        return a * (1 - 0.3 * x)
+
+    def _build(self, dist=None, **kwargs):
+        return modifier.Modifier(
+            self.pars,
+            dist or self._alt,
+            self._null,
+            self.mapping,
+            self.bins,
+            **kwargs,
+        )
+
+    def test_no_bound_leaves_the_weights_alone(self):
+        cmod = self._build()
+
+        assert cmod.weight_bound is None
+        assert np.asarray(cmod.get_weights({"a": 1.0})) == pytest.approx(
+            [0.35, 0.5, 0.65]
+        )
+
+    def test_positive_bound_clips(self):
+        cmod = self._build(weight_bound=0.5)
+
+        assert np.asarray(cmod.get_weights({"a": 1.0})) == pytest.approx(
+            [0.35, 0.5, 0.5]
+        )
+
+    def test_zero_bound_is_applied_not_ignored(self):
+        """The regression: a falsy bound used to be dropped on the floor."""
+        cmod = self._build(weight_bound=0.0)
+
+        assert np.asarray(cmod.get_weights({"a": 1.0})) == pytest.approx(
+            [0.0, 0.0, 0.0]
+        )
+
+    def test_negative_bound_is_applied(self):
+        cmod = self._build(
+            dist=self._falling, weight_bound=-0.03, allow_negative_weights=True
+        )
+
+        # only the weight already below the bound is left alone
+        assert np.asarray(cmod.get_weights({"a": 1.0})) == pytest.approx(
+            [-0.03, -0.03, -0.065]
+        )
+
+
 def test_svd():
     cov = np.identity(10)
     assert (modifier._svd(cov) == cov).all()
