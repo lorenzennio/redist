@@ -51,6 +51,12 @@ class Modifier:
                 the backend active at construction. Defaults to ``"auto"``.
             quad_order (int, optional): Gauss-Legendre nodes per bin and
                 dimension. Ignored by `nquad`. Defaults to 16.
+
+        Raises:
+            ValueError: If the null distribution integrates to zero, or to
+                something not finite, in any bin inside the cutoff. The
+                reweighting ratio is undefined there, so no physical yield can
+                be built from it.
         """
         # store name and cutoff
         self.name = name if name else "custom"
@@ -97,18 +103,31 @@ class Modifier:
             order=self.quad_order,
         )
 
-        # Bins that carry no information: those outside the cutoff, which
-        # `bintegrate` marks with NaN, and those where the null distribution has
-        # no density to reweight. This follows from the binning alone, so it is
-        # fixed here rather than rediscovered from NaNs on every call. Keeping
-        # the denominator free of zeros means the division can never manufacture
-        # a NaN of its own, which would otherwise poison gradients under jax.
+        # Bins the cutoff excludes carry no information and are dropped. This
+        # follows from the binning alone, so it is settled here rather than
+        # rediscovered from NaNs on every call, which also keeps NaN out of the
+        # traced path where it would poison gradients.
         null_binned = np.asarray(self.null_binned, dtype=float)
-        self._invalid = (
-            ~np.isfinite(null_binned)
-            | (null_binned == 0.0)
-            | ~_inside_cutoff(bins, self.cutoff)
-        )
+        self._invalid = ~_inside_cutoff(bins, self.cutoff)
+
+        # A bin the null distribution does not populate cannot be reweighted:
+        # the ratio has no finite value, and any yield built from it would be
+        # unphysical rather than merely imprecise. Refuse to build the modifier
+        # instead of substituting something that looks like a result.
+        degenerate = ~self._invalid & ~(np.isfinite(null_binned) & (null_binned != 0.0))
+        if degenerate.any():
+            raise ValueError(
+                "the null distribution integrates to zero or is not finite in "
+                f"{int(degenerate.sum())} of {int((~self._invalid).sum())} bins "
+                "inside the cutoff, so the reweighting ratio is undefined there "
+                "and the yields would not be physical. Affected bins: "
+                f"{', '.join(_describe_bins(bins, degenerate))}. Restrict the "
+                "binning or the cutoff to where the null distribution has "
+                "support."
+            )
+
+        # every remaining bin is finite and non-zero, so the division below
+        # cannot manufacture a NaN of its own
         self._null_safe = np.where(self._invalid, 1.0, null_binned)
         self._ones = np.ones_like(self._null_safe)
 
@@ -410,6 +429,35 @@ def _bintegrate_gauss(func, bins, args=(), cutoff=None, order=16):
     if cutoff is not None:
         result = tensorlib.where(_inside_cutoff(bins, cutoff), result, np.nan)
     return result
+
+
+def _describe_bins(bins, mask, limit=3):
+    """
+    Edges of the flagged bins, for error messages.
+
+    `bintegrate` returns its result transposed, so the last axis is the first
+    kinematic dimension.
+
+    Args:
+        bins (array): Binning of the integration.
+        mask (array): Boolean array in `bintegrate`'s layout.
+        limit (int, optional): Most bins to describe. Defaults to 3.
+
+    Returns:
+        list: Human-readable bin ranges.
+    """
+    flagged = np.argwhere(np.atleast_1d(mask))
+    described = []
+    for index in flagged[:limit]:
+        edges = []
+        for dim, edge_array in enumerate(bins):
+            edge_array = np.asarray(edge_array, dtype=float)
+            position = index[-1 - dim]
+            edges.append(f"[{edge_array[position]:g}, {edge_array[position + 1]:g}]")
+        described.append(" x ".join(edges))
+    if len(flagged) > limit:
+        described.append(f"and {len(flagged) - limit} more")
+    return described
 
 
 def _inside_cutoff(bins, cutoff):
