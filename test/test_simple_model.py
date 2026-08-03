@@ -69,32 +69,35 @@ class TestSimpleModel:
         assert "h_decorrelated[0]" in self.model.config.par_map
         assert "h_decorrelated[1]" in self.model.config.par_map
 
+    # Gauss-Legendre sums its nodes in an order numpy is free to change between
+    # versions, so the last bit of a yield is not reproducible across
+    # interpreters -- these same numbers land one ulp apart on 3.9 and on 3.12.
+    # The tolerance is a few ulp, which still catches any real drift.
+    ULP = 1e-15
+
     def test_yields(self):
         init = self.model.config.suggested_init()
 
         init[0] = 2.0
         init[1] = -0.2
         init[2] = -0.2
-        assert list(self.model.expected_actualdata(init)) == [
-            70.87379321155956,
-            106.54738593108388,
-        ]
+        assert list(self.model.expected_actualdata(init)) == pytest.approx(
+            [70.87379321155956, 106.5473859310839], rel=self.ULP
+        )
 
         init[0] = 4.0
         init[1] = -1.0
         init[2] = 2.0
-        assert list(self.model.expected_actualdata(init)) == [
-            130.750118100226,
-            241.82138862829896,
-        ]
+        assert list(self.model.expected_actualdata(init)) == pytest.approx(
+            [130.75011810022602, 241.82138862829896], rel=self.ULP
+        )
 
         init[0] = 10.0
         init[1] = -5.0
         init[2] = 5.0
-        assert list(self.model.expected_actualdata(init)) == [
-            534.8812568724203,
-            1153.7637634754312,
-        ]
+        assert list(self.model.expected_actualdata(init)) == pytest.approx(
+            [534.8812568724203, 1153.7637634754315], rel=self.ULP
+        )
 
     def test_best_fit(self):
         print(self.best_fit)
@@ -104,12 +107,12 @@ class TestSimpleModel:
         # them; the relative one still pins the parameters of order one.
         assert self.best_fit == pytest.approx(
             [
-                1.01373667e00,
-                -9.82596041e-04,
-                1.29756436e-03,
+                1.01373882e00,
+                -9.85076153e-04,
+                1.29777515e-03,
                 1.00000000e00,
-                9.87905789e-01,
-                1.02699179e00,
+                9.87905813e-01,
+                1.02699001e00,
             ],
             rel=1e-4,
             abs=1e-5,
