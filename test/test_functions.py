@@ -23,6 +23,74 @@ def test_bintegrate():
     ) == [1.71828183, 4.67077427, 12.69648082, 34.51261311, 93.81500907]
 
 
+class TestQuadratureCache:
+    """The Gauss-Legendre grid is cached, so its key has to be exactly right.
+
+    A stale grid would integrate over the wrong points and still return a
+    plausible number, which nothing downstream could catch.
+    """
+
+    @staticmethod
+    def _linear(x, a=1.0):
+        return a * x
+
+    @staticmethod
+    def _plane(x, y, a=1.0):
+        return a * (x + y)
+
+    def test_different_binnings_do_not_share_a_grid(self):
+        first = modifier.bintegrate(
+            self._linear, [np.array([0.0, 1.0, 2.0])], quad="gauss"
+        )
+        second = modifier.bintegrate(
+            self._linear, [np.array([0.0, 2.0, 4.0])], quad="gauss"
+        )
+
+        assert np.asarray(first) == pytest.approx([0.5, 1.5])
+        assert np.asarray(second) == pytest.approx([2.0, 6.0])
+
+    def test_different_orders_do_not_share_a_grid(self):
+        """Same binning, different node count: the result must not be reused."""
+        bins = [np.array([0.0, 1.0, 2.0])]
+        low = modifier.bintegrate(self._linear, bins, quad="gauss", order=2)
+        high = modifier.bintegrate(self._linear, bins, quad="gauss", order=32)
+
+        # both are exact for a linear integrand, so they must agree
+        assert np.asarray(low) == pytest.approx([0.5, 1.5], abs=1e-14)
+        assert np.asarray(high) == pytest.approx([0.5, 1.5], abs=1e-14)
+
+    def test_dimensionality_change_does_not_share_a_grid(self):
+        one_d = modifier.bintegrate(self._linear, [np.array([0.0, 2.0])], quad="gauss")
+        two_d = modifier.bintegrate(
+            self._plane, [np.array([0.0, 2.0]), np.array([0.0, 2.0])], quad="gauss"
+        )
+
+        assert np.asarray(one_d).ravel().tolist() == pytest.approx([2.0])
+        assert np.shape(two_d) == (1, 1)
+        assert np.asarray(two_d).ravel().tolist() == pytest.approx([8.0])
+
+    def test_repeated_calls_agree(self):
+        """The second call reads the cache; it must match the first."""
+        bins = [np.array([0.0, 1.0, 3.0]), np.array([2.0, 5.0])]
+        first = np.asarray(modifier.bintegrate(self._plane, bins, quad="gauss"))
+        second = np.asarray(modifier.bintegrate(self._plane, bins, quad="gauss"))
+
+        assert np.array_equal(first, second)
+        assert first == pytest.approx(
+            np.asarray(modifier.bintegrate(self._plane, bins, quad="nquad")), abs=1e-12
+        )
+
+    def test_a_function_cannot_corrupt_the_grid(self):
+        """Writing to the arguments would poison every later call."""
+
+        def mutating(x, a=1.0):
+            x += 1.0
+            return a * x
+
+        with pytest.raises(ValueError, match="read-only"):
+            modifier.bintegrate(mutating, [np.array([0.0, 1.0])], quad="gauss")
+
+
 class TestCutoff:
     """Both quadrature rules must exclude the same bins.
 

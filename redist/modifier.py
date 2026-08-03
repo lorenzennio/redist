@@ -3,6 +3,7 @@ from copy import deepcopy
 import itertools
 from collections import defaultdict
 from collections.abc import Iterable
+from functools import lru_cache
 import numpy as np
 import scipy as sp
 import json
@@ -79,8 +80,7 @@ class Modifier:
         self.nominal = np.sum(self.map, axis=1)
 
         # Resolve the quadrature rule once, so the null and the alternative are
-        # always integrated the same way. "auto" reads the backend active now,
-        # so set the backend before building the modifier.
+        # always integrated the same way.
         if quad == "auto":
             quad = "nquad" if get_backend()[0].name == "numpy" else "gauss"
         if quad not in ("nquad", "gauss"):
@@ -399,15 +399,69 @@ def _bintegrate_gauss(func, bins, args=(), cutoff=None, order=16):
     """
     tensorlib, _ = get_backend()
 
-    # Nodes and weights are fixed, and mapping them onto the bins depends only
-    # on the binning, so all of this is plain NumPy regardless of the backend.
+    grid, quad_weights, split_shape = _gauss_grid(_edge_key(bins), order)
+
+    integrand = func(*grid, *args) * quad_weights
+
+    # Split every axis back into (bin, node) and sum the nodes away. Walking the
+    # dimensions backwards keeps the axis numbers of the remaining ones valid.
+    integrand = tensorlib.reshape(integrand, split_shape)
+    for dim in reversed(range(len(bins))):
+        integrand = tensorlib.sum(integrand, axis=2 * dim + 1)
+
+    # match the axis order `bintegrate` returns
+    result = tensorlib.transpose(integrand)
+
+    if cutoff is not None:
+        result = tensorlib.where(_inside_cutoff(bins, cutoff), result, np.nan)
+    return result
+
+
+def _edge_key(bins):
+    """
+    Hashable form of a binning, for use as a cache key.
+
+    Args:
+        bins (array): Binning of the integration.
+
+    Returns:
+        tuple: One tuple of floats per kinematic dimension.
+    """
+    return tuple(tuple(np.asarray(b, dtype=float).ravel().tolist()) for b in bins)
+
+
+@lru_cache(maxsize=32)
+def _gauss_grid(edges, order):
+    """
+    Evaluation points and weights for tensor-product Gauss-Legendre quadrature.
+
+    These depend only on the binning and the order, never on the parameters, so
+    they are built once per binning and reused. Rebuilding them on every call
+    took about three quarters of the time a bin integral spent.
+
+    Everything here is plain NumPy and has to stay that way. An array assembled
+    from backend tensors inside a `jax.jit` trace would be a tracer, and caching
+    a tracer leaks it out of the trace it belongs to.
+
+    The arrays are handed to `func` rather than copied, so they are marked
+    read-only: a function that wrote to its own arguments would otherwise
+    corrupt the grid for every later call.
+
+    Args:
+        edges (tuple): Bin edges per kinematic dimension, as nested tuples of
+            floats so that they can be hashed.
+        order (int): Nodes per bin and dimension.
+
+    Returns:
+        tuple: Node grid, quadrature weights, and the (bin, node) split shape.
+    """
     nodes, node_weights = np.polynomial.legendre.leggauss(order)
     axis_nodes = []
     axis_weights = []
-    for b in bins:
-        edges = np.asarray(b, dtype=float)
-        low = edges[:-1, None]
-        high = edges[1:, None]
+    for edge in edges:
+        edge_array = np.asarray(edge, dtype=float)
+        low = edge_array[:-1, None]
+        high = edge_array[1:, None]
         half = 0.5 * (high - low)
         axis_nodes.append((0.5 * (low + high) + half * nodes).ravel())
         axis_weights.append((half * node_weights).ravel())
@@ -418,23 +472,14 @@ def _bintegrate_gauss(func, bins, args=(), cutoff=None, order=16):
     for w in weight_grid[1:]:
         quad_weights = quad_weights * w
 
-    integrand = func(*grid, *args) * quad_weights
-
-    # Split every axis back into (bin, node) and sum the nodes away. Walking the
-    # dimensions backwards keeps the axis numbers of the remaining ones valid.
     split_shape = []
-    for b in bins:
-        split_shape += [len(b) - 1, order]
-    integrand = tensorlib.reshape(integrand, tuple(split_shape))
-    for dim in reversed(range(len(bins))):
-        integrand = tensorlib.sum(integrand, axis=2 * dim + 1)
+    for edge in edges:
+        split_shape += [len(edge) - 1, order]
 
-    # match the axis order `bintegrate` returns
-    result = tensorlib.transpose(integrand)
+    for array in (*grid, quad_weights):
+        array.flags.writeable = False
 
-    if cutoff is not None:
-        result = tensorlib.where(_inside_cutoff(bins, cutoff), result, np.nan)
-    return result
+    return tuple(grid), quad_weights, tuple(split_shape)
 
 
 def _describe_bins(bins, mask, limit=3):
