@@ -204,6 +204,67 @@ class TestSaveLoad:
             list(model.expected_actualdata(pars)), rel=1e-12
         )
 
+    def test_roundtrip_preserves_weight_settings(self, tmp_path):
+        """Anything that changes the weights has to survive the round trip."""
+        cmods, model = _build(["chan_a"], ["chan_a"])
+        cmod = modifier.Modifier(
+            PARAMS,
+            alt_dist,
+            null_dist,
+            MAP,
+            [BINNING],
+            name=cmods[0].name,
+            allow_negative_weights=True,
+            quad_order=32,
+        )
+        path = str(tmp_path / "settings.json")
+        modifier.save(path, model.spec, [cmod])
+
+        _, loaded = modifier.load(path, alt_dist, null_dist, return_modifier=True)
+
+        assert loaded[0].allow_negative_weights is True
+        assert loaded[0].quad_order == 32
+
+    def test_roundtrip_keeps_negative_weights(self, tmp_path):
+        """The flag is not cosmetic: losing it rewrites the weights to ones."""
+
+        def falling(x, a=1.0):
+            return a * (1 - 0.3 * x)  # negative above x = 10/3
+
+        cmods, model = _build(["chan_a"], ["chan_a"])
+        cmod = modifier.Modifier(
+            PARAMS,
+            falling,
+            null_dist,
+            MAP,
+            [BINNING],
+            name=cmods[0].name,
+            allow_negative_weights=True,
+        )
+        path = str(tmp_path / "negative.json")
+        modifier.save(path, model.spec, [cmod])
+
+        _, loaded = modifier.load(path, falling, null_dist, return_modifier=True)
+
+        weights = np.asarray(cmod.get_weights({"a": 1.0}))
+        assert (weights < 0.0).any(), "the case the flag exists for"
+        assert np.asarray(loaded[0].get_weights({"a": 1.0})) == pytest.approx(weights)
+
+    def test_file_without_the_new_keys_still_loads(self, tmp_path):
+        """Models saved before these settings were written keep working."""
+        path, _, _, _ = _save_single_channel(tmp_path, "chan_a")
+        with open(path) as f:
+            saved = json.load(f)
+        del saved["allow_negative_weights"]
+        del saved["quad_order"]
+        with open(path, "w") as f:
+            json.dump(saved, f)
+
+        _, loaded = modifier.load(path, alt_dist, null_dist, return_modifier=True)
+
+        assert loaded[0].allow_negative_weights is False
+        assert loaded[0].quad_order == 16
+
     def test_bins_serialise_as_nested_lists(self, tmp_path):
         """`bins` is a list of arrays, one per kinematic dimension."""
         path, _, _, _ = _save_single_channel(tmp_path, "chan_a")
