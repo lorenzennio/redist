@@ -7,8 +7,10 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      # report every version, rather than cancelling the rest on first failure
+      fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
 
     steps:
       - uses: actions/checkout@v4
@@ -41,8 +43,7 @@ jobs:
         run: pytest
 
   # The tests above run without jax, so the jax-specific ones skip there.
-  # This job installs the optional extra so they actually execute. jax needs
-  # a newer Python than the floor the matrix above covers.
+  # This job installs the optional extra so they actually execute.
   jax:
     runs-on: ubuntu-latest
 
@@ -52,7 +53,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.14'
 
       - name: Install dependencies with the jax extra
         run: |
