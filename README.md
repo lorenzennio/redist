@@ -54,21 +54,13 @@ model = modifier.load("model.json", alt_dist, null_dist)
 grad = jax.grad(lambda pars: model.logpdf(pars, data)[0])(pars)
 ```
 
-Two things are required of the distributions:
+The distributions must accept broadcast arrays and be written with operations
+JAX can trace: `jax.numpy` rather than `scipy`, and no Python `if` on parameter
+values. Adaptive quadrature cannot be traced, so the fallback described below
+does not apply here.
 
-- They must be written with operations JAX can trace, so `jax.numpy` rather
-  than `scipy`, and no Python `if` on parameter values.
-- They are called once with one broadcast array per kinematic dimension, all of
-  the same shape, and must return an array of that shape. This differs from the
-  scalar-at-a-time signature `scipy.integrate.nquad` uses on the NumPy backend.
-
-The bin integrals are then computed by fixed-order Gauss-Legendre quadrature
-(`quad="gauss"`, `quad_order=16` by default) instead of adaptive quadrature,
-since adaptive quadrature cannot be traced. NumPy remains the default backend
-and keeps using adaptive quadrature, unchanged.
-
-Theory codes that are not written in JAX — `EOS`, for example — cannot be
-differentiated through. Using them still works on the NumPy backend.
+Theory codes that are not written in JAX — `EOS`, for example — therefore
+cannot be differentiated through. Using them still works on the NumPy backend.
 
 ### Bayesian inference (optional)
 If you want to perform Bayesian inference with `redist` (or `pyhf`) you'll need to install `bayesian_pyhf`. 
@@ -83,6 +75,15 @@ For visualization of the posterior distribution, `corner` is very useful:
 ```bash
 pip install corner
 ```
+
+### Bin integrals
+
+The bin integrals use fixed-order Gauss-Legendre quadrature, which calls each
+distribution once with one broadcast array per kinematic dimension. A theory
+code that can only be evaluated a point at a time — `EOS`, for example — is
+detected when the modifier is built and falls back to adaptive quadrature, one
+to two orders of magnitude slower. `cmod.quad` reports which rule was picked,
+and `quad="gauss"` or `quad="nquad"` forces one.
 
 ## Contact
 
