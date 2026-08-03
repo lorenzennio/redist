@@ -35,6 +35,41 @@ pip install -e redist
 ## Dependencies
 This implementation is based on the [pyhf](https://github.com/scikit-hep/pyhf) software for statistical inference. The [examples](examples) use the [EOS](https://github.com/eos/eos) software to calculate theoretical predictions.
 
+### Gradients with JAX (optional)
+
+`redist` runs on any `pyhf` backend. On the JAX backend the likelihood becomes
+differentiable, so it can be used with `jax.grad`, `jax.jit` and `jax.vmap`:
+
+```bash
+pip install redistpy[jax]
+```
+
+```python
+import pyhf, jax, jax.numpy as jnp
+from redist import modifier
+
+pyhf.set_backend("jax")          # set the backend *before* building the modifier
+
+model = modifier.load("model.json", alt_dist, null_dist)
+grad = jax.grad(lambda pars: model.logpdf(pars, data)[0])(pars)
+```
+
+Two things are required of the distributions:
+
+- They must be written with operations JAX can trace, so `jax.numpy` rather
+  than `scipy`, and no Python `if` on parameter values.
+- They are called once with one broadcast array per kinematic dimension, all of
+  the same shape, and must return an array of that shape. This differs from the
+  scalar-at-a-time signature `scipy.integrate.nquad` uses on the NumPy backend.
+
+The bin integrals are then computed by fixed-order Gauss-Legendre quadrature
+(`quad="gauss"`, `quad_order=16` by default) instead of adaptive quadrature,
+since adaptive quadrature cannot be traced. NumPy remains the default backend
+and keeps using adaptive quadrature, unchanged.
+
+Theory codes that are not written in JAX — `EOS`, for example — cannot be
+differentiated through. Using them still works on the NumPy backend.
+
 ### Bayesian inference (optional)
 If you want to perform Bayesian inference with `redist` (or `pyhf`) you'll need to install `bayesian_pyhf`. 
 

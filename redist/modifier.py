@@ -7,6 +7,7 @@ import numpy as np
 import scipy as sp
 import json
 import pyhf
+from pyhf import get_backend
 from redist import custom_modifier
 
 
@@ -27,6 +28,8 @@ class Modifier:
         cutoff=None,
         weight_bound=None,
         allow_negative_weights=False,
+        quad="auto",
+        quad_order=16,
     ):
         """
         Args:
@@ -39,6 +42,15 @@ class Modifier:
             cutoff (tuple, optional): Kinematic cutoff values to limit the integration boundaries to a given range. Defaults to None.
             weight_bound (float, optional): Upper bound on the weight. Defaults to None.
             allow_negative_weights (bool, optional): Allow negative weights. Defaults to False.
+            quad (string, optional): Quadrature rule for the bin integrals.
+                ``"nquad"`` uses adaptive `scipy` quadrature and only works on
+                the NumPy backend. ``"gauss"`` uses fixed-order Gauss-Legendre
+                quadrature, which can be traced and differentiated, and requires
+                the distributions to accept broadcast arrays. ``"auto"`` picks
+                `nquad` on the NumPy backend and `gauss` on any other, based on
+                the backend active at construction. Defaults to ``"auto"``.
+            quad_order (int, optional): Gauss-Legendre nodes per bin and
+                dimension. Ignored by `nquad`. Defaults to 16.
         """
         # store name and cutoff
         self.name = name if name else "custom"
@@ -57,8 +69,37 @@ class Modifier:
 
         self.nominal = np.sum(self.map, axis=1)
 
+        # Resolve the quadrature rule once, so the null and the alternative are
+        # always integrated the same way. "auto" reads the backend active now,
+        # so set the backend before building the modifier.
+        if quad == "auto":
+            quad = "nquad" if get_backend()[0].name == "numpy" else "gauss"
+        if quad not in ("nquad", "gauss"):
+            raise ValueError(
+                f"unknown quadrature rule {quad!r}, expected auto, nquad or gauss"
+            )
+        self.quad = quad
+        self.quad_order = quad_order
+
         # compute the bin-integrated null distribution (this is fixed)
-        self.null_binned = bintegrate(null_dist, bins, cutoff=self.cutoff)
+        self.null_binned = bintegrate(
+            null_dist, bins, cutoff=self.cutoff, quad=self.quad, order=self.quad_order
+        )
+
+        # Bins that carry no information: those outside the cutoff, which
+        # `bintegrate` marks with NaN, and those where the null distribution has
+        # no density to reweight. This follows from the binning alone, so it is
+        # fixed here rather than rediscovered from NaNs on every call. Keeping
+        # the denominator free of zeros means the division can never manufacture
+        # a NaN of its own, which would otherwise poison gradients under jax.
+        null_binned = np.asarray(self.null_binned, dtype=float)
+        self._invalid = (
+            ~np.isfinite(null_binned)
+            | (null_binned == 0.0)
+            | ~_inside_cutoff(bins, self.cutoff)
+        )
+        self._null_safe = np.where(self._invalid, 1.0, null_binned)
+        self._ones = np.ones_like(self._null_safe)
 
         # take care of correlated paramters
         self.new_pars = new_pars
@@ -145,15 +186,37 @@ class Modifier:
                 if corr_k == re.sub(r"_decorrelated[\(\[].*?[\)\]]", "", par_k):
                     pyhf_shifts[corr_k].append(par_v)
 
+        tensorlib = self._tensorlib()
         for corr_k, pyhf_shift_list in pyhf_shifts.items():
             corr_v = self.corr_infos[corr_k]
-            pyhf_shifts_arr = np.array(pyhf_shift_list)
-            pars_shifts = corr_v["uvec"] @ pyhf_shifts_arr
-            pars_new = corr_v["mean"] + pars_shifts
+            pyhf_shifts_arr = tensorlib.stack(pyhf_shift_list)
+            pars_shifts = tensorlib.astensor(corr_v["uvec"]) @ pyhf_shifts_arr
+            pars_new = tensorlib.astensor(corr_v["mean"]) + pars_shifts
             for ind, par in enumerate(pars_new):
                 rot_pars[corr_k + f"[{ind}]"] = par
 
         return rot_pars
+
+    def _tensorlib(self):
+        """
+        The active pyhf tensor library, checked against the quadrature rule.
+
+        The fixed arrays are deliberately kept as plain NumPy and converted at
+        the point of use rather than cached per backend. A cached array that was
+        first built inside a `jax.jit` trace is a tracer, and reusing it on the
+        next call leaks it out of its trace.
+
+        Returns:
+            tensorlib: The active pyhf tensor library.
+        """
+        tensorlib, _ = get_backend()
+        if tensorlib.name != "numpy" and self.quad == "nquad":
+            raise ValueError(
+                f"the {tensorlib.name} backend cannot trace through adaptive "
+                "quadrature; build the modifier with quad='gauss', or set the "
+                "backend before building it so quad='auto' can pick it up"
+            )
+        return tensorlib
 
     def get_weights(self, pars):
         """
@@ -165,25 +228,38 @@ class Modifier:
         Returns:
             array: Weights for the given parameters.
         """
+        tensorlib = self._tensorlib()
+
         # compute original parameters from pyhf parameters
         rot_pars = self.rotate_pars(pars)
 
         alt_binned = bintegrate(
-            self.alt_dist, self.bins, tuple(rot_pars.values()), cutoff=self.cutoff
+            self.alt_dist,
+            self.bins,
+            tuple(rot_pars.values()),
+            cutoff=self.cutoff,
+            quad=self.quad,
+            order=self.quad_order,
         )
 
-        weights = alt_binned / self.null_binned
+        weights = tensorlib.divide(alt_binned, self._null_safe)
+        weights = tensorlib.where(self._invalid, self._ones, weights)
 
-        weights[np.isnan(weights)] = 1.0
+        # an alternative distribution can still return NaN on its own; the
+        # comparison is the backend-agnostic spelling of isnan
+        weights = tensorlib.where(weights != weights, self._ones, weights)
         if not self.allow_negative_weights:
-            weights[weights < 0.0] = 1.0
+            weights = tensorlib.where(weights < 0.0, self._ones, weights)
         if self.weight_bound:
-            weights[weights > self.weight_bound] = self.weight_bound
+            weights = tensorlib.where(
+                weights > self.weight_bound,
+                self._ones * self.weight_bound,
+                weights,
+            )
 
-        # flatten the weights
-        weights = weights.reshape(-1, order="F")
-
-        return weights
+        # flatten the weights in Fortran order, to match the map's column
+        # layout; transposing then ravelling is the backend-agnostic spelling
+        return tensorlib.ravel(tensorlib.transpose(weights))
 
     def weight_func(self, pars):
         """
@@ -195,23 +271,32 @@ class Modifier:
         Returns:
             callable: Function that returns histogram modifications.
         """
-        key = tuple(i for i in pars.items())
-        if key in self.cache:
-            return self.cache[key]
+        tensorlib = self._tensorlib()
+
+        # Only NumPy hands over concrete, hashable parameter values, and it is
+        # also the backend that pays for adaptive quadrature. A tracing backend
+        # would key the cache on a tracer, so skip it there and let jit do the
+        # equivalent job.
+        cacheable = tensorlib.name == "numpy"
+        if cacheable:
+            key = tuple(i for i in pars.items())
+            if key in self.cache:
+                return self.cache[key]
 
         weights = self.get_weights(pars)
-        results = self.map @ weights
+        results = tensorlib.astensor(self.map) @ weights
         results = results / self.nominal
 
         def func():
             return results
 
-        self.cache[key] = func
+        if cacheable:
+            self.cache[key] = func
 
         return func
 
 
-def bintegrate(func, bins, args=(), cutoff=None):
+def bintegrate(func, bins, args=(), cutoff=None, quad="nquad", order=16):
     """
     Integrate function in given bins.
 
@@ -220,10 +305,19 @@ def bintegrate(func, bins, args=(), cutoff=None):
         bins (array): Binning of the integration.
         args (tuple, optional): Additional arguments for the function. Defaults to ().
         cutoff (tuple, optional): Cutoff values for the integration. Defaults to None.
+        quad (str, optional): Quadrature rule, ``"nquad"`` or ``"gauss"``.
+            Defaults to ``"nquad"``.
+        order (int, optional): Number of Gauss-Legendre nodes per bin and
+            dimension, ignored by ``"nquad"``. Defaults to 16.
 
     Returns:
-        _type_: _description_
+        array: Bin-integrated function values.
     """
+    if quad == "gauss":
+        return _bintegrate_gauss(func, bins, args=args, order=order)
+    if quad != "nquad":
+        raise ValueError(f"unknown quadrature rule {quad!r}, expected nquad or gauss")
+
     cutoff = cutoff if cutoff else tuple((-np.inf, np.inf) for _ in bins)
     ranges = [list(zip(b[:-1], b[1:])) for b in bins]
     results = []
@@ -236,6 +330,94 @@ def bintegrate(func, bins, args=(), cutoff=None):
         else:
             results.append(sp.integrate.nquad(func, limits, args=args)[0])
     return np.reshape(results, tuple(len(b) - 1 for b in bins)).T
+
+
+def _bintegrate_gauss(func, bins, args=(), order=16):
+    """
+    Integrate function in given bins by tensor-product Gauss-Legendre quadrature.
+
+    Unlike `scipy.integrate.nquad`, this evaluates `func` at a fixed set of
+    points, so it can be traced and differentiated. It is exact for polynomials
+    up to degree ``2 * order - 1`` per dimension.
+
+    `func` is called once, with one broadcast array per kinematic dimension, all
+    of the same shape, and must return an array of that shape. That is the plain
+    elementwise convention; it does not accept the scalar-at-a-time signature
+    `nquad` uses.
+
+    Bins outside a cutoff are integrated like any other. Excluding them is left
+    to the caller, so that no NaN enters the graph and gradients stay finite.
+
+    Args:
+        func (callable): Function to be integrated.
+        bins (array): Binning of the integration.
+        args (tuple, optional): Additional arguments for the function. Defaults to ().
+        order (int, optional): Nodes per bin and dimension. Defaults to 16.
+
+    Returns:
+        array: Bin-integrated function values.
+    """
+    tensorlib, _ = get_backend()
+
+    # Nodes and weights are fixed, and mapping them onto the bins depends only
+    # on the binning, so all of this is plain NumPy regardless of the backend.
+    nodes, node_weights = np.polynomial.legendre.leggauss(order)
+    axis_nodes = []
+    axis_weights = []
+    for b in bins:
+        edges = np.asarray(b, dtype=float)
+        low = edges[:-1, None]
+        high = edges[1:, None]
+        half = 0.5 * (high - low)
+        axis_nodes.append((0.5 * (low + high) + half * nodes).ravel())
+        axis_weights.append((half * node_weights).ravel())
+
+    grid = np.meshgrid(*axis_nodes, indexing="ij")
+    weight_grid = np.meshgrid(*axis_weights, indexing="ij")
+    quad_weights = weight_grid[0]
+    for w in weight_grid[1:]:
+        quad_weights = quad_weights * w
+
+    integrand = func(*grid, *args) * quad_weights
+
+    # Split every axis back into (bin, node) and sum the nodes away. Walking the
+    # dimensions backwards keeps the axis numbers of the remaining ones valid.
+    split_shape = []
+    for b in bins:
+        split_shape += [len(b) - 1, order]
+    integrand = tensorlib.reshape(integrand, tuple(split_shape))
+    for dim in reversed(range(len(bins))):
+        integrand = tensorlib.sum(integrand, axis=2 * dim + 1)
+
+    # match the axis order `bintegrate` returns
+    return tensorlib.transpose(integrand)
+
+
+def _inside_cutoff(bins, cutoff):
+    """
+    Bins lying fully inside the cutoff, in the layout `bintegrate` returns.
+
+    `bintegrate` marks excluded bins with NaN, which is enough for NumPy but
+    would poison gradients under a tracing backend. Deriving the same
+    information from the binning alone keeps NaN out of the graph.
+
+    Args:
+        bins (array): Binning of the integration.
+        cutoff (tuple): Cutoff values, or None for no cutoff.
+
+    Returns:
+        array: Boolean array, True where the bin is inside the cutoff.
+    """
+    cutoff = cutoff if cutoff else tuple((-np.inf, np.inf) for _ in bins)
+    ranges = [list(zip(b[:-1], b[1:])) for b in bins]
+    inside = [
+        all(
+            limit[0] >= cut[0] and limit[1] <= cut[1]
+            for limit, cut in zip(limits, cutoff)
+        )
+        for limits in itertools.product(*ranges)
+    ]
+    return np.reshape(inside, tuple(len(b) - 1 for b in bins)).T
 
 
 def _svd(cov, return_rot=False):
