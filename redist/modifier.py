@@ -140,12 +140,13 @@ class Modifier:
             rot_pars[re.sub("_decorrelated", "", k)] = v
         pyhf_shifts = defaultdict(list)
 
-        for corr_k, corr_v in self.corr_infos.items():
+        for corr_k in self.corr_infos:
             for par_k, par_v in pars.items():
-                if corr_k == re.sub("_decorrelated[\(\[].*?[\)\]]", "", par_k):
+                if corr_k == re.sub(r"_decorrelated[\(\[].*?[\)\]]", "", par_k):
                     pyhf_shifts[corr_k].append(par_v)
 
         for corr_k, pyhf_shift_list in pyhf_shifts.items():
+            corr_v = self.corr_infos[corr_k]
             pyhf_shifts_arr = np.array(pyhf_shift_list)
             pars_shifts = corr_v["uvec"] @ pyhf_shifts_arr
             pars_new = corr_v["mean"] + pars_shifts
