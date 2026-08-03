@@ -107,18 +107,18 @@ class TestSimpleModel:
         init[1] = 1.0
         print(list(self.model.expected_actualdata(init)))
         assert list(self.model.expected_actualdata(init)) == [
-            87.31293547591133,
+            87.3129354759113,
             106.2242274556989,
-            122.56775971774324,
+            122.56775971774323,
             206.14632294135367,
         ]
 
         init[0] = 3.0
         init[1] = 2.0
         assert list(self.model.expected_actualdata(init)) == [
-            95.77097849197044,
+            95.77097849197045,
             115.40807581856629,
-            127.52258657258108,
+            127.52258657258109,
             208.71544098045123,
         ]
 

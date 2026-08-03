@@ -5,6 +5,7 @@ absent. Nothing here is required for the NumPy path to work.
 """
 
 import json
+import math
 import os
 
 import numpy as np
@@ -235,8 +236,20 @@ class TestQuadSelection:
         cmod, _ = _build()
         assert cmod.quad == "gauss"
 
-    def test_auto_picks_nquad_under_numpy(self, numpy_backend):
+    def test_auto_picks_gauss_under_numpy_too(self, numpy_backend):
+        """These distributions take arrays, so nothing forces adaptive quadrature."""
         cmod, _ = _build()
+        assert cmod.quad == "gauss"
+
+    def test_auto_falls_back_for_a_pointwise_distribution(self, numpy_backend):
+        """An EOS-style observable can only be called one point at a time."""
+
+        def pointwise(x, a=1.0):
+            return a * math.exp(-x / 3.0)
+
+        cmod = modifier.Modifier(
+            NEW_PARAMS, pointwise, pointwise, MAPPING_DIST, [BINNING]
+        )
         assert cmod.quad == "nquad"
 
     def test_nquad_under_jax_reports_clearly(self, numpy_backend):
