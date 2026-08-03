@@ -6,6 +6,7 @@ applier has to get right.
 """
 
 import json
+from copy import deepcopy
 
 import numpy as np
 import pytest
@@ -176,6 +177,46 @@ class TestMultiChannel:
         assert yields_b[:2] == pytest.approx(nominal_a, rel=1e-12)
         assert not np.allclose(yields_a[:2], nominal_a)
         assert not np.allclose(yields_b[2:], nominal_b)
+
+
+class TestAddToModel:
+    """`add_to_model` returns a new model and leaves the old one alone."""
+
+    @staticmethod
+    def _fresh():
+        cmod = modifier.Modifier(
+            PARAMS, alt_dist, null_dist, MAP, [BINNING], name="theory_chan_a"
+        )
+        model = pyhf.Model({"channels": [_channel_spec("chan_a")]})
+        return cmod, model
+
+    def test_does_not_mutate_the_input_model(self):
+        cmod, model = self._fresh()
+        before = deepcopy(model.spec)
+
+        modifier.add_to_model(
+            model, ["chan_a"], ["signal"], cmod.expanded_pyhf, _modifier_spec("chan_a")
+        )
+
+        assert model.spec == before
+
+    def test_repeated_calls_do_not_duplicate_the_modifier(self):
+        """Re-running the same notebook cell used to append the modifier again."""
+        cmod, model = self._fresh()
+        spec = _modifier_spec("chan_a")
+
+        first = modifier.add_to_model(
+            model, ["chan_a"], ["signal"], cmod.expanded_pyhf, spec
+        )
+        second = modifier.add_to_model(
+            model, ["chan_a"], ["signal"], cmod.expanded_pyhf, spec
+        )
+
+        names = [
+            m["name"] for m in second.spec["channels"][0]["samples"][0]["modifiers"]
+        ]
+        assert names.count(spec["name"]) == 1
+        assert first.spec == second.spec
 
 
 def _save_single_channel(tmp_path, channel):

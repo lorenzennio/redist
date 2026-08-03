@@ -540,6 +540,11 @@ def add_to_model(
     """
     Add a custom modifier to a pyhf model.
 
+    The model handed in is left alone. `pyhf.Model.spec` is the model's own
+    dictionary rather than a copy, so appending to it in place would edit the
+    caller's model as well, and calling this twice, as re-running a notebook
+    cell does, would leave the spec carrying the modifier twice over.
+
     Args:
         model (pyhf.Model): pyhf model.
         channels (list): List of channel names to add the modifier to.
@@ -551,7 +556,7 @@ def add_to_model(
     Returns:
         pyhf.Model: Model with the custom modifier added.
     """
-    spec = model.spec
+    spec = deepcopy(model.spec)
 
     for c, chan in enumerate(spec["channels"]):
         if chan["name"] in channels:
