@@ -39,3 +39,31 @@ jobs:
 
       - name: Run tests
         run: pytest
+
+  # The tests above run without jax, so the jax-specific ones skip there.
+  # This job installs the optional extra so they actually execute. jax needs
+  # a newer Python than the floor the matrix above covers.
+  jax:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies with the jax extra
+        run: |
+          python -m pip install uv
+          uv pip install --system --upgrade -e ".[dev,jax]"
+
+      - name: Show installed packages
+        run: pip list
+
+      - name: Run tests
+        run: pytest
+
+      - name: Fail if the jax tests were skipped
+        run: pytest test/test_jax_backend.py -q --no-header -p no:cacheprovider | tee /dev/stderr | grep -qE "[0-9]+ passed"

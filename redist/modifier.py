@@ -516,10 +516,10 @@ def save(file, spec, cmods, data=None):
         "name": [cmod.name for cmod in cmods],
         "new_pars": [cmod.new_pars for cmod in cmods],
         "map": [cmod.map.tolist() for cmod in cmods],
-        "bins": [
-            cmod.bins if isinstance(cmod.bins, list) else cmod.bins.tolist()
-            for cmod in cmods
-        ],
+        # one binning array per kinematic dimension; converting each dimension
+        # separately covers a list of arrays, which is what `Modifier` is
+        # normally handed, as well as a list of lists or a single 2d array
+        "bins": [[np.asarray(b).tolist() for b in cmod.bins] for cmod in cmods],
         "cutoff": [cmod.cutoff for cmod in cmods],
         "weight_bound": [cmod.weight_bound for cmod in cmods],
     }
@@ -585,6 +585,20 @@ def load(file, alt_dist, null_dist, return_modifier=False, return_data=False, **
     return model
 
 
+class _UnvalidatedWorkspace(pyhf.Workspace):
+    """
+    Workspace that skips schema validation.
+
+    Custom modifier types are not part of pyhf's workspace schema, so a
+    workspace holding one cannot be validated. Both `Workspace.build` and
+    `Workspace.combine` construct their result through `cls`, so defaulting
+    validation off here carries through both of them.
+    """
+
+    def __init__(self, spec, validate=False, **config_kwargs):
+        super().__init__(spec, validate=validate, **config_kwargs)
+
+
 def combine(files, alt_dists, null_dists, return_data=False, **kwargs):
     """
     Combine multiple models into one.
@@ -614,12 +628,12 @@ def combine(files, alt_dists, null_dists, return_data=False, **kwargs):
             name = " ".join([cmod.name for cmod in c])
         else:
             name = c.name
-        workspaces.append(pyhf.Workspace.build(m, d, name, validate=False))
+        workspaces.append(_UnvalidatedWorkspace.build(m, d, name, validate=False))
 
     comb_ws = None
     for w in workspaces:
         if comb_ws:
-            comb_ws = pyhf.Workspace.combine(comb_ws, w, validate=False)
+            comb_ws = _UnvalidatedWorkspace.combine(comb_ws, w)
         else:
             comb_ws = w
 
