@@ -48,6 +48,9 @@ eos = [
     "eoshep>=1.0.11",
     "dynesty==2.0.3",
 ]
+jax = [
+    "pyhf[jax]",
+]
 
 [project.urls]
 Homepage = "https://github.com/lorenzennio/redist"
