@@ -112,6 +112,32 @@ def add(funcname, par_names, newparams, input_set=None, namespace=None):
                 self.custommod_mask, dtype="bool"
             )
             self.custommod_default = tensorlib.ones(self.custommod_mask.shape)
+            # backend-independent copy of the mask, used to build the scatter
+            # indices below; depends only on the model layout, never on pars
+            self._mask_np = np.tile(
+                np.asarray(self._custommod_mask, dtype=bool),
+                (1, 1, self.batch_size or 1, 1),
+            )
+            self._scatter_index_cache = {}
+
+        def _scatter_indices(self, n_source):
+            """Indices into a flat source that reproduce ``np.place``.
+
+            ``np.place(target, mask, source)`` writes into the mask's True
+            positions in C order, cycling through the flattened source when it
+            is shorter. Gathering with these indices and then masking is the
+            equivalent that works on every pyhf backend, unlike the in-place
+            ``np.place``, which cannot be traced.
+
+            Depends only on static shapes, so it is built once per source size.
+            """
+            indices = self._scatter_index_cache.get(n_source)
+            if indices is None:
+                flat_mask = self._mask_np.ravel()
+                indices = np.zeros(flat_mask.size, dtype=int)
+                indices[flat_mask] = np.arange(int(flat_mask.sum())) % n_source
+                self._scatter_index_cache[n_source] = indices
+            return indices
 
         def apply(self, pars):
             """
@@ -123,12 +149,17 @@ def add(funcname, par_names, newparams, input_set=None, namespace=None):
             tensorlib, _ = get_backend()
             deps = self.param_viewer.get(pars)
             out = tensorlib.astensor([f(deps) for f in self.funcs])
-            results = np.ones_like(self.custommod_mask)
-            np.place(results, self.custommod_mask, out)
-            results = tensorlib.where(
+            flat_out = tensorlib.ravel(out)
+            indices = self._scatter_indices(int(tensorlib.shape(flat_out)[0]))
+            results = tensorlib.reshape(
+                tensorlib.gather(flat_out, indices),
+                tensorlib.shape(self.custommod_mask),
+            )
+            # entries gathered outside the mask are discarded here, so they
+            # contribute no value and no gradient
+            return tensorlib.where(
                 self.custommod_mask_bool, results, self.custommod_default
             )
-            return results
 
     modifier_set = {_applier.name: (_builder, _applier)}
     modifier_set.update(
