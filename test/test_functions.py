@@ -95,6 +95,101 @@ class TestCutoff:
         assert weights[0][0] == pytest.approx(1.0)
 
 
+class TestDegenerateNull:
+    """A bin the null distribution does not populate has no defined weight.
+
+    The ratio is undefined there, so the modifier refuses to build rather than
+    returning a yield that looks physical but is not.
+    """
+
+    pars = {
+        "a": {
+            "inits": (1.0,),
+            "bounds": ((0.0, 10.0),),
+            "paramset_type": "unconstrained",
+        }
+    }
+    mapping = np.array([[2.0, 2.0, 1.0], [2.0, 6.0, 2.0]])
+
+    @staticmethod
+    def _odd(x, a=1.0):
+        """Integrates to exactly zero over any bin symmetric about zero."""
+        return a * x
+
+    @staticmethod
+    def _alt(x, a=1.0):
+        return a * (1 + x)
+
+    def test_zero_bin_is_rejected(self):
+        with pytest.raises(ValueError, match="not be physical"):
+            modifier.Modifier(
+                self.pars,
+                self._alt,
+                self._odd,
+                self.mapping,
+                [np.array([-1.0, 1.0, 2.0, 3.0])],
+            )
+
+    def test_error_names_the_offending_bin(self):
+        with pytest.raises(ValueError, match=r"\[-1, 1\]"):
+            modifier.Modifier(
+                self.pars,
+                self._alt,
+                self._odd,
+                self.mapping,
+                [np.array([-1.0, 1.0, 2.0, 3.0])],
+            )
+
+    def test_bin_excluded_by_the_cutoff_is_fine(self):
+        """Only bins the fit actually uses have to be well defined."""
+        cmod = modifier.Modifier(
+            self.pars,
+            self._alt,
+            self._odd,
+            self.mapping,
+            [np.array([-1.0, 1.0, 2.0, 3.0])],
+            cutoff=((1.0, 3.0),),
+        )
+        weights = np.asarray(cmod.get_weights({"a": 2.0}))
+
+        assert np.isfinite(weights).all()
+        assert weights[0] == pytest.approx(1.0)
+
+    def test_both_quadrature_rules_reject(self):
+        for quad in ("nquad", "gauss"):
+            with pytest.raises(ValueError, match="not be physical"):
+                modifier.Modifier(
+                    self.pars,
+                    self._alt,
+                    self._odd,
+                    self.mapping,
+                    [np.array([-1.0, 1.0, 2.0, 3.0])],
+                    quad=quad,
+                )
+
+    def test_two_dimensional_bins_are_named_correctly(self):
+        """The result is transposed, so the reported edges are easy to get wrong."""
+
+        def null_2d(x, y, a=1.0):
+            return a * y
+
+        def alt_2d(x, y, a=1.0):
+            return a * (1 + x + y)
+
+        with pytest.raises(ValueError) as excinfo:
+            modifier.Modifier(
+                self.pars,
+                alt_2d,
+                null_2d,
+                np.ones((2, 2, 2)),
+                [np.array([0.0, 1.0, 2.0]), np.array([-1.0, 1.0, 2.0])],
+            )
+
+        # the zero bins are those whose y range is symmetric about zero
+        assert "[0, 1] x [-1, 1]" in str(excinfo.value)
+        assert "[1, 2] x [-1, 1]" in str(excinfo.value)
+
+
 def test_svd():
     cov = np.identity(10)
     assert (modifier._svd(cov) == cov).all()
