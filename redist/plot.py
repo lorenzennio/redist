@@ -28,11 +28,14 @@ def _dists1d(cmod, alt_pars, lims, labels, plot_dists, plot_weights, axis):
     if not lims:
         lims = [cmod.bins[0][0], cmod.bins[0][-1]]
 
-    null = modifier.bintegrate(cmod.null_dist, cmod.bins, cutoff=cmod.cutoff) / np.diff(
-        cmod.bins[0]
-    )
+    # integrate the way the modifier does, so the plot shows what the fit sees
+    quad = {"quad": cmod.quad, "order": cmod.quad_order}
+
+    null = modifier.bintegrate(
+        cmod.null_dist, cmod.bins, cutoff=cmod.cutoff, **quad
+    ) / np.diff(cmod.bins[0])
     alt = modifier.bintegrate(
-        cmod.alt_dist, cmod.bins, tuple(alt_pars), cutoff=cmod.cutoff
+        cmod.alt_dist, cmod.bins, tuple(alt_pars), cutoff=cmod.cutoff, **quad
     ) / np.diff(cmod.bins[0])
 
     if plot_dists and plot_weights:
@@ -91,11 +94,14 @@ def _dists2d(cmod, alt_pars, lims, labels, plot_dists, plot_weights, ax):
 
     X, Y = np.meshgrid(x, y)  # grid of point
 
+    # integrate the way the modifier does, so the plot shows what the fit sees
+    quad = {"quad": cmod.quad, "order": cmod.quad_order}
+
     Znull = cmod.null_dist(x, y)
-    Znull_bin = modifier.bintegrate(cmod.null_dist, cmod.bins)
+    Znull_bin = modifier.bintegrate(cmod.null_dist, cmod.bins, **quad)
 
     Zalt = cmod.alt_dist(x, y, *tuple(alt_pars))
-    Zalt_bin = modifier.bintegrate(cmod.alt_dist, cmod.bins, tuple(alt_pars))
+    Zalt_bin = modifier.bintegrate(cmod.alt_dist, cmod.bins, tuple(alt_pars), **quad)
 
     if not plot_weights:
         fig, ax = plt.subplots(1, 2, figsize=(14, 5))
