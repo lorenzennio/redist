@@ -6,7 +6,6 @@ applier has to get right.
 """
 
 import json
-import os
 
 import numpy as np
 import pytest
@@ -271,9 +270,7 @@ class TestCombine:
             _save_single_channel(tmp_path, channel)[0]
             for channel in ("chan_a", "chan_b")
         ]
-        combined = modifier.combine(
-            paths, [alt_dist, alt_dist], [null_dist, null_dist]
-        )
+        combined = modifier.combine(paths, [alt_dist, alt_dist], [null_dist, null_dist])
 
         nominal = np.asarray(
             combined.expected_actualdata(_pars(combined, a=1.0, mu=1.0))
@@ -337,9 +334,7 @@ class TestJaxAgreement:
                 paths, [alt_dist, alt_dist], [null_dist, null_dist]
             )
             pars = _pars(model, a=3.0, mu=1.0)
-            data = jnp.asarray(
-                [55.0, 70.0, 47.0, 33.0] + list(model.config.auxdata)
-            )
+            data = jnp.asarray([55.0, 70.0, 47.0, 33.0] + list(model.config.auxdata))
             grad = jax.grad(lambda p: model.logpdf(p, data)[0])(jnp.asarray(pars))
             assert bool(jnp.all(jnp.isfinite(grad)))
             assert not bool(jnp.all(grad == 0.0))
