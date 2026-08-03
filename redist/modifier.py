@@ -40,7 +40,10 @@ class Modifier:
             bins (array): kinematic binning
             name (string, optional): Name of the custom modifier. Defaults to None.
             cutoff (tuple, optional): Kinematic cutoff values to limit the integration boundaries to a given range. Defaults to None.
-            weight_bound (float, optional): Upper bound on the weight. Defaults to None.
+            weight_bound (float, optional): Upper bound on the weight. Weights
+                above it are clipped to it. Any value is honoured, including
+                zero and negatives, which are only meaningful together with
+                `allow_negative_weights`. Defaults to None, meaning unbounded.
             allow_negative_weights (bool, optional): Allow negative weights. Defaults to False.
             quad (string, optional): Quadrature rule for the bin integrals.
                 ``"nquad"`` uses adaptive `scipy` quadrature and only works on
@@ -280,7 +283,10 @@ class Modifier:
         weights = tensorlib.where(weights != weights, self._ones, weights)
         if not self.allow_negative_weights:
             weights = tensorlib.where(weights < 0.0, self._ones, weights)
-        if self.weight_bound:
+        # Presence, not truthiness. Testing the bound for truth silently
+        # dropped a bound of zero, which is a bound like any other once
+        # `allow_negative_weights` puts weights on both sides of it.
+        if self.weight_bound is not None:
             weights = tensorlib.where(
                 weights > self.weight_bound,
                 self._ones * self.weight_bound,
