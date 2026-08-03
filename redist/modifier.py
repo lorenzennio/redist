@@ -620,6 +620,10 @@ def load(file, alt_dist, null_dist, return_modifier=False, return_data=False, **
     """
     Load and build model from file
 
+    Settings that `save` learned to write only later are optional: a file
+    written before them omits the key and the modifier falls back to its own
+    default, so older models load exactly as they did when they were saved.
+
     Args:
         file (string): File name.
         alt_dist (callable): Alternative distribution to be tested.
