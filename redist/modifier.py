@@ -31,6 +31,7 @@ class Modifier:
         allow_negative_weights=False,
         quad="auto",
         quad_order=16,
+        cache_size=128,
     ):
         """
         Args:
@@ -60,6 +61,14 @@ class Modifier:
                 the `quad` attribute. Defaults to ``"auto"``.
             quad_order (int, optional): Gauss-Legendre nodes per bin and
                 dimension. Ignored by `nquad`. Defaults to 16.
+            cache_size (int, optional): How many parameter points to keep
+                weights for on the NumPy backend. The cache is there for the
+                repeated calls a single likelihood evaluation makes with
+                identical parameters; a scan or a Markov chain never revisits a
+                point, so without a bound the cache would only grow. Least
+                recently used entries are dropped first, and zero disables it.
+                Cannot change any result, so it is not saved with the model.
+                Defaults to 128.
 
         Raises:
             ValueError: If the null distribution integrates to zero, or to
@@ -156,8 +165,11 @@ class Modifier:
         self.corr_pars, self.unco_pars = self._separate_pars(new_pars)
         self.corr_infos = self._corr_infos(self.corr_pars)
 
-        # cache previously called function values
+        # Weights already computed, keyed on the parameter point and ordered
+        # least recently used first, so the bound can be enforced by dropping
+        # from the front.
         self.cache = {}
+        self.cache_size = cache_size
 
     @property
     def expanded_pyhf(self):
@@ -330,10 +342,12 @@ class Modifier:
         # also the backend that pays for adaptive quadrature. A tracing backend
         # would key the cache on a tracer, so skip it there and let jit do the
         # equivalent job.
-        cacheable = tensorlib.name == "numpy"
+        cacheable = tensorlib.name == "numpy" and self.cache_size > 0
         if cacheable:
             key = tuple(i for i in pars.items())
             if key in self.cache:
+                # reinsert, so the least recently used entry stays at the front
+                self.cache[key] = self.cache.pop(key)
                 return self.cache[key]
 
         weights = self.get_weights(pars)
@@ -345,6 +359,8 @@ class Modifier:
 
         if cacheable:
             self.cache[key] = func
+            if len(self.cache) > self.cache_size:
+                del self.cache[next(iter(self.cache))]
 
         return func
 

@@ -91,6 +91,85 @@ class TestQuadratureCache:
             modifier.bintegrate(mutating, [np.array([0.0, 1.0])], quad="gauss")
 
 
+class TestWeightCache:
+    """The weight cache is bounded, and being bounded changes no result.
+
+    It earns its keep inside one likelihood evaluation, where the applier asks
+    for the same parameter point several times. A scan or a Markov chain never
+    asks twice, so an unbounded cache would only grow.
+    """
+
+    pars = {
+        "a": {
+            "inits": (1.0,),
+            "bounds": ((0.0, 10.0),),
+            "paramset_type": "unconstrained",
+        }
+    }
+    bins = [np.array([2.0, 3.0, 5.0, 6.0])]
+    mapping = np.array([[2.0, 2.0, 1.0], [2.0, 6.0, 2.0]])
+
+    @staticmethod
+    def _null(x, a=10.0):
+        return a
+
+    @staticmethod
+    def _alt(x, a=1.0):
+        return a * (1 + x)
+
+    def _build(self, **kwargs):
+        return modifier.Modifier(
+            self.pars, self._alt, self._null, self.mapping, self.bins, **kwargs
+        )
+
+    def test_cache_stops_growing(self):
+        cmod = self._build(cache_size=8)
+        for i in range(200):
+            cmod.weight_func({"a": 1.0 + i * 1e-6})
+
+        assert len(cmod.cache) == 8
+
+    def test_eviction_does_not_change_results(self):
+        """A dropped entry is recomputed, so it must come back identical."""
+        bounded = self._build(cache_size=2)
+        roomy = self._build(cache_size=1000)
+
+        points = [{"a": 1.0 + i * 0.5} for i in range(10)]
+        for point in points:
+            bounded.weight_func(point)
+
+        for point in points:
+            assert np.asarray(bounded.weight_func(point)()) == pytest.approx(
+                np.asarray(roomy.weight_func(point)()), rel=0.0, abs=0.0
+            )
+
+    def test_repeated_point_hits_the_cache(self):
+        cmod = self._build()
+        first = cmod.weight_func({"a": 2.0})
+        second = cmod.weight_func({"a": 2.0})
+
+        assert first is second
+        assert len(cmod.cache) == 1
+
+    def test_least_recently_used_is_dropped_first(self):
+        cmod = self._build(cache_size=2)
+        cmod.weight_func({"a": 1.0})
+        cmod.weight_func({"a": 2.0})
+        # touching the older point makes the newer one the eviction candidate
+        cmod.weight_func({"a": 1.0})
+        cmod.weight_func({"a": 3.0})
+
+        remaining = {key[0][1] for key in cmod.cache}
+        assert remaining == {1.0, 3.0}
+
+    def test_zero_disables_the_cache(self):
+        cmod = self._build(cache_size=0)
+        cmod.weight_func({"a": 2.0})
+        cmod.weight_func({"a": 2.0})
+
+        assert cmod.cache == {}
+
+
 class TestCutoff:
     """Both quadrature rules must exclude the same bins.
 
