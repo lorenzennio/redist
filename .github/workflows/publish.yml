@@ -1,0 +1,81 @@
+name: Publish
+
+# Publishing a GitHub Release uploads the package to PyPI. The upload uses
+# PyPI's trusted publishing, so there is no API token to store or rotate:
+# PyPI verifies a short-lived OIDC token issued to this workflow.
+#
+# One-time setup, at
+# https://pypi.org/manage/project/redistpy/settings/publishing:
+#   owner            lorenzennio
+#   repository       redist
+#   workflow         publish.yml
+#   environment      (leave empty)
+
+on:
+  release:
+    types: [published]
+  # Lets a failed upload be retried without cutting another release.
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # hatch-vcs reads the version from the tags, so a shallow clone
+          # would build something like 0.1.dev1 instead of the release.
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install uv
+          uv pip install --system --upgrade -e ".[dev]"
+
+      # CI gates master, but a tag can point at any commit, and an upload
+      # cannot be taken back. Run the suite once more against what is actually
+      # being shipped.
+      - name: Run tests
+        run: pytest
+
+      - name: Build
+        run: uv build
+
+      - name: Check the built version matches the tag
+        if: github.event_name == 'release'
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          built="$(ls dist/*.tar.gz | sed -E 's|.*/redistpy-(.*)\.tar\.gz|\1|')"
+          echo "tag=$tag built=$built"
+          if [ "$tag" != "$built" ]; then
+            echo "::error::tag $tag does not match built version $built"
+            exit 1
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+
+    permissions:
+      # required for trusted publishing; nothing else needs write access
+      id-token: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
