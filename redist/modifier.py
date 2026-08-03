@@ -81,9 +81,20 @@ class Modifier:
         self.quad = quad
         self.quad_order = quad_order
 
+        # `nquad` marks bins outside the cutoff with NaN, and the weights below
+        # turn those into ones. `gauss` can do the same, but the NaN would make
+        # the gradient NaN even though the value is discarded, so there the
+        # cutoff is applied through `_invalid` instead and never reaches the
+        # integrator.
+        self._quad_cutoff = self.cutoff if self.quad == "nquad" else None
+
         # compute the bin-integrated null distribution (this is fixed)
         self.null_binned = bintegrate(
-            null_dist, bins, cutoff=self.cutoff, quad=self.quad, order=self.quad_order
+            null_dist,
+            bins,
+            cutoff=self._quad_cutoff,
+            quad=self.quad,
+            order=self.quad_order,
         )
 
         # Bins that carry no information: those outside the cutoff, which
@@ -237,7 +248,7 @@ class Modifier:
             self.alt_dist,
             self.bins,
             tuple(rot_pars.values()),
-            cutoff=self.cutoff,
+            cutoff=self._quad_cutoff,
             quad=self.quad,
             order=self.quad_order,
         )
@@ -314,7 +325,7 @@ def bintegrate(func, bins, args=(), cutoff=None, quad="nquad", order=16):
         array: Bin-integrated function values.
     """
     if quad == "gauss":
-        return _bintegrate_gauss(func, bins, args=args, order=order)
+        return _bintegrate_gauss(func, bins, args=args, cutoff=cutoff, order=order)
     if quad != "nquad":
         raise ValueError(f"unknown quadrature rule {quad!r}, expected nquad or gauss")
 
@@ -332,7 +343,7 @@ def bintegrate(func, bins, args=(), cutoff=None, quad="nquad", order=16):
     return np.reshape(results, tuple(len(b) - 1 for b in bins)).T
 
 
-def _bintegrate_gauss(func, bins, args=(), order=16):
+def _bintegrate_gauss(func, bins, args=(), cutoff=None, order=16):
     """
     Integrate function in given bins by tensor-product Gauss-Legendre quadrature.
 
@@ -345,13 +356,17 @@ def _bintegrate_gauss(func, bins, args=(), order=16):
     elementwise convention; it does not accept the scalar-at-a-time signature
     `nquad` uses.
 
-    Bins outside a cutoff are integrated like any other. Excluding them is left
-    to the caller, so that no NaN enters the graph and gradients stay finite.
+    Every bin is integrated, including those outside the cutoff, which are then
+    marked with NaN to match `nquad`. Callers that need to differentiate through
+    the result should leave `cutoff` unset and exclude those bins themselves,
+    since a NaN reaching the graph makes the gradient NaN even where the value
+    is later discarded. `Modifier` does exactly that.
 
     Args:
         func (callable): Function to be integrated.
         bins (array): Binning of the integration.
         args (tuple, optional): Additional arguments for the function. Defaults to ().
+        cutoff (tuple, optional): Cutoff values for the integration. Defaults to None.
         order (int, optional): Nodes per bin and dimension. Defaults to 16.
 
     Returns:
@@ -390,7 +405,11 @@ def _bintegrate_gauss(func, bins, args=(), order=16):
         integrand = tensorlib.sum(integrand, axis=2 * dim + 1)
 
     # match the axis order `bintegrate` returns
-    return tensorlib.transpose(integrand)
+    result = tensorlib.transpose(integrand)
+
+    if cutoff is not None:
+        result = tensorlib.where(_inside_cutoff(bins, cutoff), result, np.nan)
+    return result
 
 
 def _inside_cutoff(bins, cutoff):

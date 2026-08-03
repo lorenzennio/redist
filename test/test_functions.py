@@ -23,6 +23,78 @@ def test_bintegrate():
     ) == [1.71828183, 4.67077427, 12.69648082, 34.51261311, 93.81500907]
 
 
+class TestCutoff:
+    """Both quadrature rules must exclude the same bins.
+
+    The rules are picked per backend, so a cutoff honoured by one and ignored
+    by the other would silently change what a plot shows.
+    """
+
+    bins = [np.array([0.0, 1.0, 2.0, 3.0])]
+    cutoff = ((1.0, 3.0),)  # excludes the first bin
+
+    @staticmethod
+    def _linear(x, a=1.0):
+        return a * x
+
+    def test_gauss_marks_the_same_bins_as_nquad(self):
+        nquad = np.asarray(
+            modifier.bintegrate(self._linear, self.bins, cutoff=self.cutoff)
+        )
+        gauss = np.asarray(
+            modifier.bintegrate(
+                self._linear, self.bins, cutoff=self.cutoff, quad="gauss"
+            )
+        )
+
+        assert np.isnan(gauss).tolist() == np.isnan(nquad).tolist()
+        assert gauss[~np.isnan(gauss)] == pytest.approx(
+            nquad[~np.isnan(nquad)], abs=1e-12
+        )
+
+    def test_no_cutoff_leaves_every_bin(self):
+        gauss = np.asarray(modifier.bintegrate(self._linear, self.bins, quad="gauss"))
+        assert not np.isnan(gauss).any()
+
+    def test_weights_agree_across_rules(self):
+        """The modifier keeps NaN out of its own path, but must still exclude."""
+
+        def null_dist(x, a=10.0):
+            return a
+
+        def alt_dist(x, a=1.0, h1=1.0, h2=1.0):
+            return a * (1 + x * h1 + x**2 * h2)
+
+        pars = {
+            "a": {
+                "inits": (1.0,),
+                "bounds": ((0.0, 10.0),),
+                "paramset_type": "unconstrained",
+            }
+        }
+        binning = [np.array([2.0, 3.0, 5.0, 6.0])]
+        mapping = np.array([[2.0, 2.0, 1.0], [2.0, 6.0, 2.0]])
+
+        weights = []
+        for quad in ("nquad", "gauss"):
+            cmod = modifier.Modifier(
+                pars,
+                alt_dist,
+                null_dist,
+                mapping,
+                binning,
+                cutoff=((3.0, 6.0),),
+                quad=quad,
+            )
+            # the modifier must not carry NaN, whichever rule it uses
+            assert not np.isnan(np.asarray(cmod._null_safe)).any()
+            weights.append(np.asarray(cmod.get_weights({"a": 2.0})))
+
+        assert weights[1] == pytest.approx(weights[0], rel=1e-10)
+        # the excluded bin is pinned to one rather than reweighted
+        assert weights[0][0] == pytest.approx(1.0)
+
+
 def test_svd():
     cov = np.identity(10)
     assert (modifier._svd(cov) == cov).all()
