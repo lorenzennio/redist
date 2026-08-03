@@ -572,6 +572,12 @@ def save(file, spec, cmods, data=None):
     """
     Save the custom model, mapping distribution (and data).
 
+    Every setting that changes the weights is written out, so `load` rebuilds
+    the same model. The one exception is `quad`, which follows the backend
+    active when the model is loaded rather than the one that saved it; that is
+    an implementation choice, not physics, and pinning it would stop a model
+    saved on NumPy from being differentiated under JAX.
+
     Args:
         file (string): File name.
         spec (dict): Model specification.
@@ -589,6 +595,8 @@ def save(file, spec, cmods, data=None):
         "bins": [[np.asarray(b).tolist() for b in cmod.bins] for cmod in cmods],
         "cutoff": [cmod.cutoff for cmod in cmods],
         "weight_bound": [cmod.weight_bound for cmod in cmods],
+        "allow_negative_weights": [cmod.allow_negative_weights for cmod in cmods],
+        "quad_order": [cmod.quad_order for cmod in cmods],
     }
     if data is not None:
         d["data"] = np.array(data).tolist()
@@ -618,10 +626,19 @@ def load(file, alt_dist, null_dist, return_modifier=False, return_data=False, **
     new_pars = {}
     for pars in d["new_pars"]:
         new_pars.update(_read_pars(pars))
+    # Settings `save` learned to write later on. A file that predates them
+    # simply omits the key, and the modifier falls back to its own default, so
+    # models saved by an older version load exactly as they did before.
+    optional = {
+        key: d.get(key, [None] * len(d["name"]))
+        for key in ("allow_negative_weights", "quad_order")
+    }
+
     cmods = []
-    for name, map, bins, cutoff, weight_bound in zip(
-        d["name"], d["map"], d["bins"], d["cutoff"], d["weight_bound"]
+    for i, (name, map, bins, cutoff, weight_bound) in enumerate(
+        zip(d["name"], d["map"], d["bins"], d["cutoff"], d["weight_bound"])
     ):
+        saved = {k: v[i] for k, v in optional.items() if v[i] is not None}
         cmods.append(
             Modifier(
                 new_pars,
@@ -632,6 +649,7 @@ def load(file, alt_dist, null_dist, return_modifier=False, return_data=False, **
                 name=name,
                 cutoff=cutoff,
                 weight_bound=weight_bound,
+                **saved,
             )
         )
 
