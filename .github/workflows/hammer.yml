@@ -1,0 +1,126 @@
+# HAMMER is not on PyPI: it is a C++ library with a Cython wrapper, built from
+# source, and the build takes long enough that it does not belong in the CI that
+# every push runs. The main workflow therefore lets the tests needing it skip,
+# and this one builds it and runs them, on demand and once a week.
+name: HAMMER
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Mondays, 05:00 UTC. HAMMER moves slowly; this is here to catch a release
+    # that breaks the build, rather than to gate a change.
+    - cron: '0 5 * * 1'
+  push:
+    paths:
+      - 'redist/modifier_hammer.py'
+      - 'test/test_hammer_*.py'
+      - '.github/workflows/hammer.yml'
+  pull_request:
+    paths:
+      - 'redist/modifier_hammer.py'
+      - 'test/test_hammer_*.py'
+      - '.github/workflows/hammer.yml'
+
+env:
+  HAMMER_VERSION: v1.3.0
+
+jobs:
+  hammer:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # The build is what costs; it depends only on the HAMMER version and on
+      # this file, so it is kept between runs. Both directories are needed:
+      # Hammer-install holds the libraries, Hammer-build/pyext the bindings
+      # that have to be pip installed into every run's fresh environment.
+      - name: Cache the HAMMER build
+        id: hammer-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            Hammer-install
+            Hammer-build
+          key: hammer-${{ runner.os }}-${{ env.HAMMER_VERSION }}-${{ hashFiles('.github/workflows/hammer.yml') }}
+
+      - name: Install prerequisites
+        if: steps.hammer-cache.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential libboost-all-dev
+
+      - name: Fetch and patch the HAMMER source
+        if: steps.hammer-cache.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 --branch "$HAMMER_VERSION" \
+            https://gitlab.com/mpapucci/Hammer.git
+          cd Hammer
+
+          # -ansi is C++98 and the sources are not, so it has to go. Matched on
+          # the flag rather than on a line number, so that a point release that
+          # moves the line fails loudly here instead of patching something else.
+          sed -i 's/ -ansi -D_FILE_OFFSET_BITS=64/ -D_FILE_OFFSET_BITS=64/' \
+            CMakeModules/CompilerChecks.cmake
+          if grep -q -- '-ansi -D_FILE_OFFSET_BITS=64' CMakeModules/CompilerChecks.cmake; then
+            echo "the -ansi patch did not apply"
+            exit 1
+          fi
+
+          # Cython will not take byte literals as these enum values. Same
+          # reasoning: matched on the declaration, not on its line number.
+          sed -i -E "s/(UNDEFINED) = b'u'/\1 = 117/;
+                     s/(HEADER) = b'b'/\1 = 98/;
+                     s/(EVENT) = b'e'/\1 = 101/;
+                     s/(HISTOGRAM) = b'h'/\1 = 104/;
+                     s/(RATE) = b'r'/\1 = 114/;
+                     s/(HISTOGRAM_DEFINITION) = b'd'/\1 = 100/" \
+            pyext/wrapper/cppdefs.pxd
+          if grep -qE "= b'[ubehrd]'" pyext/wrapper/cppdefs.pxd; then
+            echo "the cppdefs patches did not all apply:"
+            grep -nE "= b'[ubehrd]'" pyext/wrapper/cppdefs.pxd
+            exit 1
+          fi
+
+      - name: Build HAMMER
+        if: steps.hammer-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir Hammer-build
+          cd Hammer-build
+          cmake -DCMAKE_INSTALL_PREFIX=../Hammer-install \
+                -DWITH_PYTHON=ON \
+                -DINSTALL_EXTERNAL_DEPENDENCIES=ON \
+                -DFORCE_YAMLCPP_INSTALL=ON \
+                ../Hammer
+          make -j"$(nproc)"
+          make install
+
+      - name: Install the HAMMER bindings
+        run: |
+          python -m pip install --upgrade pip wheel setuptools
+          python -m pip install ./Hammer-build/pyext
+          echo "LD_LIBRARY_PATH=$PWD/Hammer-install/lib:$PWD/Hammer-install/lib64:$LD_LIBRARY_PATH" \
+            >> "$GITHUB_ENV"
+
+      - name: Install redist
+        run: |
+          python -m pip install uv
+          uv pip install --system --upgrade -e ".[dev]"
+
+      - name: Show installed packages
+        run: pip list
+
+      - name: Run the tests
+        run: pytest -rs
+
+      # A green run means nothing if the tests needing HAMMER skipped, which is
+      # exactly what happens when the build quietly produced no usable bindings.
+      - name: Fail if the hammer tests were skipped
+        run: |
+          pytest test/test_hammer_cacher.py -q --no-header -p no:cacheprovider \
+            | tee /dev/stderr | grep -qE "[0-9]+ passed"
