@@ -38,8 +38,9 @@ def fixed_infer_model(stat_model, unconstrained_priors, data, ur_hyperparameters
         # Expected_Data = pm.Normal("Expected_Data", mu=expData_op_Act(pars), observed=data)
         yield m
 
+SETTING = 'large'  # 'small' or 'large'
 
-files       = ['../knunu/knunu_model.json', '../ksnunu/ksnunu_model.json']
+files       = [f'../knunu/knunu_model_{SETTING}.json', f'../ksnunu/ksnunu_model_{SETTING}.json']
 alt_dists   = [knunu_utils.alt_pred().distribution, ksnunu_utils.alt_pred().distribution]
 null_dists  = [knunu_utils.null_pred().distribution, ksnunu_utils.null_pred().distribution]
 
