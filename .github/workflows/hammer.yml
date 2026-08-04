@@ -36,6 +36,13 @@ jobs:
         with:
           python-version: '3.12'
 
+      # HAMMER's own make runs pyext/setup.py as its last target, so setuptools
+      # has to be there before the build, not after it. Nothing since Python
+      # 3.12 ships it, which is what this step is for; cython and numpy are
+      # what that setup.py goes on to need.
+      - name: Install the build-time Python packages
+        run: python -m pip install --upgrade pip wheel setuptools cython numpy
+
       # The build is what costs; it depends only on the HAMMER version and on
       # this file, so it is kept between runs. Both directories are needed:
       # Hammer-install holds the libraries, Hammer-build/pyext the bindings
@@ -102,7 +109,6 @@ jobs:
 
       - name: Install the HAMMER bindings
         run: |
-          python -m pip install --upgrade pip wheel setuptools
           python -m pip install ./Hammer-build/pyext
           echo "LD_LIBRARY_PATH=$PWD/Hammer-install/lib:$PWD/Hammer-install/lib64:$LD_LIBRARY_PATH" \
             >> "$GITHUB_ENV"
