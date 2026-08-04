@@ -121,8 +121,30 @@ jobs:
       - name: Show installed packages
         run: pip list
 
-      - name: Run the tests
-        run: pytest -rs
+      # Importing HAMMER turned pathlib into WindowsPath and os.sep into a
+      # backslash, which broke pytest's collection of every file after it.
+      # Report what it actually touches, so that the split below is aimed at
+      # something known rather than guessed at.
+      - name: Report what importing HAMMER does to the interpreter
+        run: |
+          python - <<'PY'
+          import os, pathlib, sys
+          names = ("os.name", "os.sep", "os.altsep", "sys.platform", "pathlib.Path")
+          before = (os.name, os.sep, os.altsep, sys.platform, pathlib.Path)
+          import hammer.hammerlib
+          after = (os.name, os.sep, os.altsep, sys.platform, pathlib.Path)
+          for name, b, a in zip(names, before, after):
+              print(f"{'CHANGED' if b != a else 'ok':>8}  {name}: {b!r} -> {a!r}")
+          print("hammer package:", hammer.__file__)
+          PY
+
+      # Two processes, deliberately. Whatever HAMMER does to the interpreter on
+      # import, it then cannot reach the collection of anything else.
+      - name: Run the tests that do not need HAMMER
+        run: pytest --ignore=test/test_hammer_cacher.py -rs
+
+      - name: Run the HAMMER tests
+        run: pytest test/test_hammer_cacher.py -rs
 
       # A green run means nothing if the tests needing HAMMER skipped, which is
       # exactly what happens when the build quietly produced no usable bindings.
