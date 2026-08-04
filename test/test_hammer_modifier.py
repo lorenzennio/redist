@@ -100,19 +100,24 @@ class TestHammerModifier:
         ]
 
     def test_best_fit(self):
-        # Re-recorded against master. The values this pinned were taken before
-        # master replaced np.place in the applier with a traceable gather, which
-        # moved the minimiser's endpoint in the fifth decimal -- the same shift
-        # the pre-existing hammer modifier shows, so it is master's arithmetic
-        # and not this module's.
-        assert pytest.approx(self.best_fit, 1e-4) == [
-            2.09387981,
-            0.02795103,
-            -0.03984055,
-            1.0,
-            1.03135335,
-            0.98326125,
-        ]
+        # The two decorrelated nuisance parameters sit at a few times 1e-2, next
+        # to a flat minimum, and where the minimiser stops along it depends on
+        # the scipy version: 1.15 and 1.18 differ by 3e-5, which is 4e-4
+        # relative on those two and would fail a relative tolerance that says
+        # nothing about the fit. The absolute tolerance is what constrains them;
+        # the relative one still pins the parameters of order one.
+        assert self.best_fit == pytest.approx(
+            [
+                2.09390946,
+                0.02796296,
+                -0.03985101,
+                1.0,
+                1.03135326,
+                0.98326032,
+            ],
+            rel=1e-4,
+            abs=1e-4,
+        )
 
 
 PARS = {"a": 2.0, "h_decorrelated[0]": 0.5, "h_decorrelated[1]": -0.5}
