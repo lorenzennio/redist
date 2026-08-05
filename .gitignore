@@ -9,6 +9,8 @@
 #results
 */results/
 *.json
+# the hammer example is driven by a config file, which has to be tracked
+!examples/hammer/*.json
 
 #cache
 */__pycache__/
