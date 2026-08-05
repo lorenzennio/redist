@@ -684,6 +684,30 @@ class TestOptionalDependency:
         """
         monkeypatch.setitem(sys.modules, "hammer.hammerlib", None)
         monkeypatch.setitem(sys.modules, "hammer", None)
+        monkeypatch.setattr(
+            modifier_hammer.importlib.util, "find_spec", lambda name: None
+        )
 
-        with pytest.raises(ImportError, match="README"):
+        with pytest.raises(ImportError, match="not installed") as caught:
             modifier_hammer.HammerCacher("f.dat", "h", {}, "set", {}, {}, 1.0)
+        assert "README" in str(caught.value)
+
+    def test_a_built_hammer_that_will_not_load_says_so(self, monkeypatch):
+        """
+        Installed-but-unloadable is a different problem from absent.
+
+        A HAMMER built without its shared libraries on the loader's path fails
+        the same import, and calling that "not installed" sends people off to
+        build it a second time. CI hit exactly this, with a missing libboost,
+        and the message sent the diagnosis the wrong way.
+        """
+        monkeypatch.setitem(sys.modules, "hammer.hammerlib", None)
+        monkeypatch.setitem(sys.modules, "hammer", None)
+        monkeypatch.setattr(
+            modifier_hammer.importlib.util, "find_spec", lambda name: object()
+        )
+
+        with pytest.raises(ImportError, match="installed but its bindings") as caught:
+            modifier_hammer.HammerCacher("f.dat", "h", {}, "set", {}, {}, 1.0)
+        assert "LD_LIBRARY_PATH" in str(caught.value)
+        assert "not installed" not in str(caught.value)

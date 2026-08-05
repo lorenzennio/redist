@@ -23,6 +23,12 @@ on:
 
 env:
   HAMMER_VERSION: v1.3.0
+  # Bump when the build recipe itself changes -- the patches, the cmake flags,
+  # the HAMMER version. Deliberately not a hash of this file: the cache holds a
+  # build, and editing which steps are conditional does not change that build.
+  # Hashing the whole file meant every edit invalidated it, which is how the
+  # cache-hit path stayed untested through six runs.
+  HAMMER_CACHE_VERSION: '1'
 
 jobs:
   hammer:
@@ -65,10 +71,15 @@ jobs:
             ${{ runner.temp }}/Hammer-install
             ${{ runner.temp }}/Hammer-build
             ${{ runner.temp }}/Hammer
-          key: hammer-${{ runner.os }}-${{ env.HAMMER_VERSION }}-${{ hashFiles('.github/workflows/hammer.yml') }}
+          key: hammer-${{ runner.os }}-${{ env.HAMMER_VERSION }}-${{ env.HAMMER_CACHE_VERSION }}
 
+      # Not conditional on the cache. hammerlib.so links against system Boost
+      # and loads it at import time, so skipping this on a hit produced a
+      # HAMMER that installed fine and then could not be imported:
+      #   libboost_thread.so.1.74.0: cannot open shared object file
+      # The build tools are only wanted on a miss, but asking apt for all of it
+      # every time is a few seconds against the five minutes the cache saves.
       - name: Install prerequisites
-        if: steps.hammer-cache.outputs.cache-hit != 'true'
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake build-essential libboost-all-dev

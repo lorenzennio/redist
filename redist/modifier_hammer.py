@@ -16,6 +16,7 @@ including `Modifier_Hammer` and the background templates, works without it.
 See the HAMMER section of the README for the build recipe.
 """
 
+import importlib.util
 import json
 import warnings
 from copy import deepcopy
@@ -40,15 +41,32 @@ def _hammerlib():
         tuple: The `Hammer`, `IOBuffer` and `RecordType` bindings.
 
     Raises:
-        ImportError: If HAMMER is not installed.
+        ImportError: If the bindings cannot be imported, whether because HAMMER
+            is absent or because it is present and will not load.
     """
     try:
         from hammer.hammerlib import Hammer, IOBuffer, RecordType
     except ImportError as exc:
+        # Say which of the two it is. A built HAMMER whose shared libraries are
+        # not on the loader's path fails here too, and reporting that as "not
+        # installed" sends people off to build it a second time. The underlying
+        # message -- a missing libboost, most often -- is the useful part.
+        installed = importlib.util.find_spec("hammer") is not None
+        if installed:
+            detail = (
+                f"HAMMER is installed but its bindings would not load ({exc}). "
+                "Its shared libraries have to be findable at import time, which "
+                "usually means putting the install prefix on LD_LIBRARY_PATH, "
+                "and any library it was built against has to still be there."
+            )
+        else:
+            detail = (
+                f"HAMMER is needed to read hammer histogram files and is not "
+                f"installed ({exc}). It is not on PyPI and has to be built from "
+                "source."
+            )
         raise ImportError(
-            "HAMMER is needed to read hammer histogram files and is not "
-            "installed. It is not on PyPI and has to be built from source; see "
-            "the HAMMER section of the redist README for the recipe."
+            f"{detail} See the HAMMER section of the redist README."
         ) from exc
     return Hammer, IOBuffer, RecordType
 
