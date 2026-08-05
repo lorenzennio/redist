@@ -50,9 +50,13 @@ jobs:
       # interpreter and was nothing of the sort.
       #
       # The build is what costs; it depends only on the HAMMER version and on
-      # this file, so it is kept between runs. Both directories are needed:
-      # Hammer-install holds the libraries, Hammer-build/pyext the bindings
-      # that have to be pip installed into every run's fresh environment.
+      # this file, so it is kept between runs. All three directories are needed,
+      # because the steps that produce them are skipped on a hit:
+      #   Hammer-install  the libraries
+      #   Hammer-build    pyext, pip installed into every run's fresh env
+      #   Hammer          the source, which pyext/setup.py reads its README from
+      # Leaving the source out looked harmless and was not: the first run that
+      # ever hit this cache died in setup.py on a missing README.md.
       - name: Cache the HAMMER build
         id: hammer-cache
         uses: actions/cache@v4
@@ -60,6 +64,7 @@ jobs:
           path: |
             ${{ runner.temp }}/Hammer-install
             ${{ runner.temp }}/Hammer-build
+            ${{ runner.temp }}/Hammer
           key: hammer-${{ runner.os }}-${{ env.HAMMER_VERSION }}-${{ hashFiles('.github/workflows/hammer.yml') }}
 
       - name: Install prerequisites
