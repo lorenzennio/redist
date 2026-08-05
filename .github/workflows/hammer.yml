@@ -43,6 +43,12 @@ jobs:
       - name: Install the build-time Python packages
         run: python -m pip install --upgrade pip wheel setuptools cython numpy
 
+      # Everything HAMMER lives outside the checkout. Its source tree and its
+      # build tree both carry Python 2 test files, from googletest and yaml-cpp,
+      # and pytest collecting those from the repo root was what broke the run
+      # -- with a WindowsPath error that looked like HAMMER corrupting the
+      # interpreter and was nothing of the sort.
+      #
       # The build is what costs; it depends only on the HAMMER version and on
       # this file, so it is kept between runs. Both directories are needed:
       # Hammer-install holds the libraries, Hammer-build/pyext the bindings
@@ -52,8 +58,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            Hammer-install
-            Hammer-build
+            ${{ runner.temp }}/Hammer-install
+            ${{ runner.temp }}/Hammer-build
           key: hammer-${{ runner.os }}-${{ env.HAMMER_VERSION }}-${{ hashFiles('.github/workflows/hammer.yml') }}
 
       - name: Install prerequisites
@@ -66,8 +72,8 @@ jobs:
         if: steps.hammer-cache.outputs.cache-hit != 'true'
         run: |
           git clone --depth 1 --branch "$HAMMER_VERSION" \
-            https://gitlab.com/mpapucci/Hammer.git
-          cd Hammer
+            https://gitlab.com/mpapucci/Hammer.git "$RUNNER_TEMP/Hammer"
+          cd "$RUNNER_TEMP/Hammer"
 
           # -ansi is C++98 and the sources are not, so it has to go. Matched on
           # the flag rather than on a line number, so that a point release that
@@ -97,20 +103,20 @@ jobs:
       - name: Build HAMMER
         if: steps.hammer-cache.outputs.cache-hit != 'true'
         run: |
-          mkdir Hammer-build
-          cd Hammer-build
-          cmake -DCMAKE_INSTALL_PREFIX=../Hammer-install \
+          mkdir "$RUNNER_TEMP/Hammer-build"
+          cd "$RUNNER_TEMP/Hammer-build"
+          cmake -DCMAKE_INSTALL_PREFIX="$RUNNER_TEMP/Hammer-install" \
                 -DWITH_PYTHON=ON \
                 -DINSTALL_EXTERNAL_DEPENDENCIES=ON \
                 -DFORCE_YAMLCPP_INSTALL=ON \
-                ../Hammer
+                "$RUNNER_TEMP/Hammer"
           make -j"$(nproc)"
           make install
 
       - name: Install the HAMMER bindings
         run: |
-          python -m pip install ./Hammer-build/pyext
-          echo "LD_LIBRARY_PATH=$PWD/Hammer-install/lib:$PWD/Hammer-install/lib64:$LD_LIBRARY_PATH" \
+          python -m pip install "$RUNNER_TEMP/Hammer-build/pyext"
+          echo "LD_LIBRARY_PATH=$RUNNER_TEMP/Hammer-install/lib:$RUNNER_TEMP/Hammer-install/lib64:$LD_LIBRARY_PATH" \
             >> "$GITHUB_ENV"
 
       - name: Install redist
@@ -121,30 +127,12 @@ jobs:
       - name: Show installed packages
         run: pip list
 
-      # Importing HAMMER turned pathlib into WindowsPath and os.sep into a
-      # backslash, which broke pytest's collection of every file after it.
-      # Report what it actually touches, so that the split below is aimed at
-      # something known rather than guessed at.
-      - name: Report what importing HAMMER does to the interpreter
-        run: |
-          python - <<'PY'
-          import os, pathlib, sys
-          names = ("os.name", "os.sep", "os.altsep", "sys.platform", "pathlib.Path")
-          before = (os.name, os.sep, os.altsep, sys.platform, pathlib.Path)
-          import hammer.hammerlib
-          after = (os.name, os.sep, os.altsep, sys.platform, pathlib.Path)
-          for name, b, a in zip(names, before, after):
-              print(f"{'CHANGED' if b != a else 'ok':>8}  {name}: {b!r} -> {a!r}")
-          print("hammer package:", hammer.__file__)
-          PY
-
-      # Two processes, deliberately. Whatever HAMMER does to the interpreter on
-      # import, it then cannot reach the collection of anything else.
-      - name: Run the tests that do not need HAMMER
-        run: pytest --ignore=test/test_hammer_cacher.py -rs
-
-      - name: Run the HAMMER tests
-        run: pytest test/test_hammer_cacher.py -rs
+      # Scoped to test/, not the whole rootdir. HAMMER is built outside the
+      # workspace precisely so that its own suite cannot be collected, but
+      # saying which directory holds our tests costs nothing and does not
+      # depend on that staying true.
+      - name: Run the tests
+        run: pytest test/ -rs
 
       # A green run means nothing if the tests needing HAMMER skipped, which is
       # exactly what happens when the build quietly produced no usable bindings.
