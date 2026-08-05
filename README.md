@@ -113,7 +113,7 @@ says where to point it. The same build recipe runs in CI as
 `.github/workflows/hammer.yml`, on demand and weekly.
 
 ### Bayesian inference (optional)
-If you want to perform Bayesian inference with `redist` (or `pyhf`) you'll need to install `bayesian_pyhf`. 
+If you want to perform Bayesian inference with `redist` (or `pyhf`) you'll need to install `bayesian_pyhf`.
 
 You can do so with::
 ```bash
